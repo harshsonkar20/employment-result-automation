@@ -2,7 +2,7 @@ name: Blogger Auto Publish Engine
 
 on:
   schedule:
-    - cron: '*/20 * * * *'
+    - cron: '*/4 * * *'
   workflow_dispatch:
 
 permissions:
