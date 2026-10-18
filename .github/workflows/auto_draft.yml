@@ -2,7 +2,12 @@ name: Blogger Auto Publish Engine
 
 on:
   schedule:
-    - cron: '0 */4 * * *'
+    # 1. Daytime Peak (10:00 AM se 8:30 PM IST): Har 40 minute me chalega
+    - cron: '*/40 4-15 * * *'
+
+    # 2. Night Off-Peak (9:00 PM se 9:00 AM IST): Har 3 ghante me chalega
+    - cron: '0 16-23,0-3/3 * * *'
+
   workflow_dispatch:
 
 permissions:
