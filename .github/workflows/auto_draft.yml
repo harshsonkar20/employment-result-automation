@@ -1,0 +1,60 @@
+name: Blogger Auto Publish Engine
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: blogger-publisher
+  cancel-in-progress: false
+
+jobs:
+  run-publisher-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 google-api-python-client google-auth-oauthlib google-auth-httplib2
+
+      - name: Execute Scraper & Publish Posts
+        env:
+          BLOG_ID: ${{ secrets.BLOG_ID }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+        run: python scraper_bot.py
+
+      - name: Save Cache & Keepalive to Repository
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          touch published_cache.json
+          git add published_cache.json
+          git commit -m "Sync published cache [skip ci]" || echo "No changes to commit"
+          git push || echo "Git push skipped"
+
+      - name: Sleep 15 Minutes
+        run: sleep 900
+
+      - name: Re-trigger Self Loop
+        run: |
+          curl -s -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "User-Agent: github-actions-automation" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/auto_draft.yml/dispatches \
+            -d '{"ref":"main"}'

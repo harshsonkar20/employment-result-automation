@@ -1,0 +1,29 @@
+name: Auto Fix Old Posts
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 urllib3 google-api-python-client google-auth-oauthlib google-auth-httplib2
+
+      - name: Run Auto Fix Script
+        env:
+          BLOG_ID: ${{ secrets.BLOG_ID }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+        run: python fix_old_posts.py
