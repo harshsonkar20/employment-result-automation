@@ -60,38 +60,208 @@ def clean_text(text):
 def safe_escape(text):
     return html.escape(clean_text(text), quote=True)
 
-# ==================== STRICT ZERO-TOLERANCE FILTER ====================
-def is_valid_real_job(title, href):
-    t = clean_text(title)
-    tl = t.lower()
-    hl = href.lower()
+def fix_relative_url(base_url, link_url):
+    if not link_url: return ""
+    u = link_url.strip()
+    if u.startswith("http://") or u.startswith("https://"): return u
+    if u.startswith("//"): return "https:" + u
+    m = re.match(r'^(https?://[^/]+)', base_url)
+    domain = m.group(1) if m else "https://sarkariresult.com.cm"
+    if u.startswith("/"): return domain + u
+    return domain + "/" + u
 
-    if len(t) < 14 or len(t.split()) < 3:
-        return False
+def generate_banner_html(title, bg_color="#8b0000"):
+    clean_t = safe_escape(title)
+    line1 = clean_t[:55]
+    line2 = clean_t[55:110] if len(clean_t) > 55 else ""
+    badge_width = 290
+    badge_x = (800 - badge_width) // 2
 
-    junk_items = [
-        "skip to content", "sarkariresult.com.cm", "sarkari result",
-        "bihar police result", "up police result", "delhi police result",
-        "mp police result", "police result", "view more", "click here",
-        "home", "contact us", "privacy policy", "disclaimer", "about us",
-        "tools", "admission", "certificate verification"
-    ]
-    if any(j in tl for j in junk_items) or tl in junk_items:
-        return False
+    return f"""
+    <div style="text-align: center; margin-bottom: 20px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" style="width: 100%; max-width: 800px; height: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:{bg_color};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="800" height="380" fill="url(#grad)" rx="8"/>
+        <rect x="0" y="0" width="800" height="65" fill="rgba(0,0,0,0.35)"/>
+        <text x="400" y="44" fill="#ffffff" font-size="24" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" letter-spacing="2">
+          ★ {SITE_BRAND_NAME} OFFICIAL NOTIFICATION ★
+        </text>
+        <rect x="{badge_x}" y="85" width="{badge_width}" height="36" rx="18" fill="#ffcc00"/>
+        <text x="400" y="108" fill="#000000" font-size="14" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" letter-spacing="0.5">
+          LATEST RECRUITMENT UPDATE
+        </text>
+        <text x="400" y="175" fill="#ffffff" font-size="24" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle">
+          {line1}
+        </text>
+        <text x="400" y="215" fill="#ffffff" font-size="22" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle">
+          {line2}
+        </text>
+        <rect x="0" y="320" width="800" height="60" fill="rgba(255,255,255,0.1)"/>
+        <text x="400" y="356" fill="#f0f0f0" font-size="16" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="middle">
+          Online Form | Important Dates | Fee | Eligibility Details
+        </text>
+      </svg>
+    </div>
+    """
 
-    # 2025 and older blacklist
-    outdated = ["2025", "2024", "2023", "2022", "2021", "2020"]
-    if any(y in tl for y in outdated) or any(f"-{y}" in hl or f"_{y}" in hl for y in outdated):
-        return False
+# ==================== PARSER: EXTRACTS REAL INNER LINKS & TABLES ====================
+def parse_full_job_page(url):
+    data = {"dates": [], "fees": [], "age_text": "", "links": [], "vacancy_tables_html": ""}
+    try:
+        r = SESSION.get(url, timeout=12)
+        if r.status_code != 200:
+            return data
+        soup = BeautifulSoup(r.text, 'html.parser')
+    except Exception as e:
+        print(f"  [Parse Error] {e}")
+        return data
 
-    if any(bad in hl for bad in ["/category/", "/tag/", "/tools", "/p/", "privacy-policy", "disclaimer"]):
-        return False
+    # 1. Dates & Fees
+    try:
+        for ul in soup.find_all('ul'):
+            lis = [safe_escape(li.get_text()) for li in ul.find_all('li')]
+            b = " ".join(lis).lower()
+            if any(k in b for k in ["application begin", "last date", "start date", "exam date"]):
+                if not data["dates"]: data["dates"] = lis
+            elif any(k in b for k in ["general", "obc", "sc / st", "fee", "payment mode"]):
+                if not data["fees"]: data["fees"] = lis
+    except Exception:
+        pass
 
-    return True
+    # 2. Age limit
+    try:
+        for p in soup.find_all(['p', 'div', 'td']):
+            raw_t = clean_text(p.get_text(separator=' '))
+            tl = raw_t.lower()
+            if "minimum age" in tl and "maximum age" in tl and len(raw_t) < 500:
+                raw_t = re.sub(r'Download.*?App.*?', '', raw_t, flags=re.IGNORECASE)
+                data["age_text"] = safe_escape(raw_t)
+                break
+    except Exception:
+        pass
 
-# ==================== STRUCTURAL SECTION EXTRACTOR ====================
-def extract_all_sections_accurately(soup):
-    category_map = {
+    # 3. Vacancy & Eligibility Tables
+    try:
+        extracted_tables = []
+        for tbl in soup.find_all('table'):
+            tbl_text = clean_text(tbl.get_text()).lower()
+            if "important links" in tbl_text or "apply online" in tbl_text:
+                if not any(k in tbl_text for k in ["post name", "total post", "vacancy details"]):
+                    continue
+
+            if any(k in tbl_text for k in ["vacancy details", "post name", "no. of post", "eligibility", "total post"]):
+                clean_table_rows = []
+                for tr in tbl.find_all('tr'):
+                    tr_text_low = clean_text(tr.get_text()).lower()
+                    if any(bad in tr_text_low for bad in ["apply online", "download notification", "official website", "click here", "join telegram", "whatsapp"]):
+                        continue
+                    cells = tr.find_all(['th', 'td'])
+                    if not cells: continue
+                    is_head = any(c.name == 'th' for c in cells) or "post name" in tr_text_low or "eligibility" in tr_text_low
+                    row_html = "<tr>"
+                    for cell in cells:
+                        ct = safe_escape(cell.get_text())
+                        if is_head:
+                            row_html += f"<th style='background:#f4f4f4; border:1px solid #999; padding:8px; font-size:13.5px;'>{ct}</th>"
+                        else:
+                            row_html += f"<td style='border:1px solid #999; padding:8px; font-size:13px;'>{ct}</td>"
+                    row_html += "</tr>"
+                    clean_table_rows.append(row_html)
+                if len(clean_table_rows) > 1:
+                    extracted_tables.append("<table style='width:100%; border-collapse:collapse; margin-bottom:15px; border:1px solid #999;'>" + "".join(clean_table_rows) + "</table>")
+        if extracted_tables:
+            data["vacancy_tables_html"] = "".join(extracted_tables[:3])
+    except Exception:
+        pass
+
+    # 4. Extract Real Direct Government Links (Skip SarkariResult URLs)
+    found_links = []
+    seen = set()
+
+    for tr in soup.find_all('tr'):
+        cells = tr.find_all(['td', 'th'])
+        if len(cells) >= 2:
+            left_lbl = clean_text(cells[0].get_text())
+            left_low = left_lbl.lower()
+            important = ["apply", "notification", "official website", "admit card", "result", "answer key", "syllabus", "registration", "login"]
+            if any(k in left_low for k in important) and len(left_lbl) < 80:
+                for a in cells[1].find_all('a', href=True):
+                    full_u = fix_relative_url(url, a['href'])
+                    
+                    # BLOCK SarkariResult internal redirects and social networks
+                    if any(bad in full_u.lower() for bad in ["sarkariresult.com.cm", "t.me", "telegram", "whatsapp", "play.google.com"]):
+                        continue
+
+                    lbl = safe_escape(re.sub(r'click here|download|link', '', left_lbl, flags=re.IGNORECASE).strip(" :-|"))
+                    if not lbl or len(lbl) < 3: lbl = safe_escape(left_lbl)
+                    
+                    if full_u not in seen:
+                        seen.add(full_u)
+                        found_links.append({"label": lbl, "url": full_u})
+
+    data["links"] = found_links[:8]
+    return data
+
+# ==================== BUILD RICH PROFESSIONAL HTML ====================
+def build_accurate_html(title, category_name, parsed, fallback_source_url="", border_color="#8b0000"):
+    clean_title = safe_escape(title)
+    banner_header = generate_banner_html(title, border_color)
+
+    dates = parsed.get("dates", [])
+    dates_html = "".join([f"<li style='margin-bottom:6px;'>{d}</li>" for d in dates[:6]]) if dates else "<li style='margin-bottom:6px;'>Status: Active Notification Released</li><li style='margin-bottom:6px;'>Last Date: Check Official Notice</li>"
+
+    fees = parsed.get("fees", [])
+    fees_html = "".join([f"<li style='margin-bottom:6px;'>{f}</li>" for f in fees[:6]]) if fees else "<li style='margin-bottom:6px;'>Application Fee: As per official advertisement</li>"
+
+    age_content = parsed.get("age_text") or "Candidate must check minimum & maximum age criteria in the official recruitment advertisement."
+    vacancy_section = f"<div style='background:{border_color}; color:#fff; text-align:center; padding:8px; font-weight:bold; margin-top:15px;'>Vacancy Details &amp; Eligibility</div>" + parsed["vacancy_tables_html"] if parsed.get("vacancy_tables_html") else ""
+
+    links = parsed.get("links", [])
+    link_rows = ""
+    for lk in links:
+        btn_color = "#0056b3" if "official" in lk['label'].lower() else ("#d35400" if "notification" in lk['label'].lower() or "pdf" in lk['label'].lower() else "#28a745")
+        link_rows += f"<tr><td style='border:1px solid #999; padding:10px; font-weight:bold;'>{lk['label']}</td><td style='border:1px solid #999; padding:10px; text-align:center;'><a href='{lk['url']}' target='_blank' rel='noopener noreferrer' style='background:{btn_color}; color:#fff; padding:7px 16px; font-weight:bold; border-radius:3px; text-decoration:none; display:inline-block;'>Click Here</a></td></tr>"
+
+    if not link_rows:
+        link_rows = f"<tr><td style='border:1px solid #999; padding:10px; font-weight:bold;'>Official Notification</td><td style='border:1px solid #999; padding:10px; text-align:center;'><span style='color:#666;'>Direct Circular In Official Release</span></td></tr>"
+
+    return f"""
+    <div style='font-family: Arial, sans-serif; line-height: 1.5; max-width: 900px; margin: 0 auto; border: 2px solid {border_color}; padding: 12px; background: #fff;'>
+      {banner_header}
+      <div style='background-color: {border_color}; color: #fff; text-align: center; padding: 12px; font-size: 20px; font-weight: bold;'>{clean_title}</div>
+      <p style='font-size: 14px; line-height: 1.7; color: #333; margin: 15px 0; padding: 12px; border-left: 4px solid {border_color}; background: #fafafa;'>
+        <strong>{clean_title}:</strong> Government and recruitment authorities have officially published this notification. Candidates can check key eligibility details, age limit, application fee schedule, and access direct vacancy links below.
+      </p>
+      <table style='width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #999;'>
+        <tr>
+          <td style='width: 50%; vertical-align: top; padding: 10px; border-right: 1px solid #999; background: #fafafa;'>
+            <div style='color: {border_color}; font-weight: bold; font-size: 15px; border-bottom: 2px solid {border_color}; margin-bottom: 8px;'>Important Dates</div>
+            <ul style='padding-left: 18px; margin: 0; font-size: 13px; line-height: 1.8;'>{dates_html}</ul>
+          </td>
+          <td style='width: 50%; vertical-align: top; padding: 10px; background: #fafafa;'>
+            <div style='color: #004085; font-weight: bold; font-size: 15px; border-bottom: 2px solid #004085; margin-bottom: 8px;'>Application Fee</div>
+            <ul style='padding-left: 18px; margin: 0; font-size: 13px; line-height: 1.8;'>{fees_html}</ul>
+          </td>
+        </tr>
+      </table>
+      <div style='padding: 10px; background: #fffcf0; border: 1px solid #999; margin-bottom: 15px;'>
+        <div style='color: #856404; font-weight: bold; font-size: 15px; margin-bottom: 6px;'>Age Limit &amp; Eligibility Summary</div>
+        <p style='margin: 0; font-size: 13px; color: #222;'>{age_content}</p>
+      </div>
+      {vacancy_section}
+      <div style='background-color: {border_color}; color: #fff; text-align: center; padding: 8px; font-size: 17px; font-weight: bold;'>Important Links</div>
+      <table style='width: 100%; border-collapse: collapse; font-size: 14px; border: 1px solid #999;'>{link_rows}</table>
+    </div>
+    """
+
+# ==================== HOMEPAGE SECTION-WISE SCRAPING ====================
+def extract_categorized_posts(soup):
+    categories = {
         "Result": [],
         "Admit Card": [],
         "Latest Jobs": [],
@@ -99,158 +269,95 @@ def extract_all_sections_accurately(soup):
         "Syllabus": []
     }
 
-    target_headings = {
-        "result": "Result",
-        "admit card": "Admit Card",
-        "latest job": "Latest Jobs",
-        "latest jobs": "Latest Jobs",
-        "answer key": "Answer Key",
-        "syllabus": "Syllabus"
-    }
+    # SarkariResult organizes homepage by panels/tables
+    for td in soup.find_all(['td', 'div']):
+        # Find exact header title
+        head = td.find(['h2', 'h3', 'th', 'b', 'span'])
+        if not head: continue
+        ht = head.get_text().strip().lower()
 
-    # Search in all potential containers
-    for tag in soup.find_all(['div', 'table', 'td', 'section']):
-        header_el = tag.find(['h2', 'h3', 'h4', 'th', 'b', 'strong'])
-        if not header_el:
-            continue
+        target_cat = None
+        if "admit card" in ht: target_cat = "Admit Card"
+        elif "result" in ht: target_cat = "Result"
+        elif "latest job" in ht: target_cat = "Latest Jobs"
+        elif "answer key" in ht: target_cat = "Answer Key"
+        elif "syllabus" in ht: target_cat = "Syllabus"
 
-        header_text = header_el.get_text().strip().lower()
-        matched_category = None
+        if not target_cat: continue
 
-        for key, cat_name in target_headings.items():
-            if key in header_text:
-                matched_category = cat_name
-                break
-
-        if not matched_category:
-            continue
-
-        for a in tag.find_all('a', href=True):
+        for a in td.find_all('a', href=True):
             t = clean_text(a.get_text())
             h = a['href'].strip()
-
-            if t.lower() in target_headings:
-                continue
 
             if not h.startswith("http"):
                 h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
 
-            if not is_valid_real_job(t, h):
-                continue
+            tl = t.lower()
+            # Filters
+            if len(t) < 14 or "2025" in tl or "2024" in tl: continue
+            if any(bad in tl for bad in ["view more", "click here", "sarkari result", "skip to content"]): continue
+
+            # Cross-contamination safeguard: Form in Admit Card -> move to Latest Jobs
+            assigned_cat = target_cat
+            if target_cat == "Admit Card" and any(k in tl for k in ["online form", "apply online", "recruitment", "vacancy"]):
+                if "admit" not in tl:
+                    assigned_cat = "Latest Jobs"
 
             item = (t, h)
-            if item not in category_map[matched_category]:
-                category_map[matched_category].append(item)
+            if item not in categories[assigned_cat]:
+                categories[assigned_cat].append(item)
 
-    # Fallback if structure is flat: Keyword scan for missing lists
-    if not any(category_map.values()):
-        for a in soup.find_all('a', href=True):
-            t = clean_text(a.get_text())
-            h = a['href'].strip()
-            if not h.startswith("http"):
-                h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
-
-            if not is_valid_real_job(t, h):
-                continue
-
-            tl, hl = t.lower(), h.lower()
-            if "answer key" in tl or "/answer-key" in hl:
-                category_map["Answer Key"].append((t, h))
-            elif "syllabus" in tl or "/syllabus" in hl:
-                category_map["Syllabus"].append((t, h))
-            elif "result" in tl or "/result" in hl:
-                category_map["Result"].append((t, h))
-            elif "admit card" in tl or "/admit" in hl:
-                category_map["Admit Card"].append((t, h))
-            else:
-                category_map["Latest Jobs"].append((t, h))
-
-    return category_map
-
-# ==================== POST BODY GENERATOR ====================
-def build_clean_post_html(title, category_name, link):
-    clean_t = safe_escape(title)
-    color_map = {
-        "Result": "#dc2626",
-        "Admit Card": "#2563eb",
-        "Latest Jobs": "#16a34a",
-        "Answer Key": "#9333ea",
-        "Syllabus": "#ea580c"
-    }
-    theme_color = color_map.get(category_name, "#2563eb")
-
-    return f"""
-    <div style='font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; max-width:850px; margin:0 auto; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; background:#ffffff;'>
-      <div style='background:{theme_color}; color:#ffffff; padding:18px; text-align:center;'>
-        <div style='font-size:13px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;'>★ {SITE_BRAND_NAME} NOTIFICATION ★</div>
-        <h1 style='font-size:22px; margin:10px 0 0 0; font-weight:800;'>{clean_t}</h1>
-      </div>
-      <div style='padding:22px;'>
-        <p style='font-size:14.5px; line-height:1.7; color:#334155; margin-bottom:20px; background:#f8fafc; padding:14px; border-left:4px solid {theme_color}; border-radius:4px;'>
-          <strong>{clean_t}:</strong> Recruitment and exam conducting authorities have released this official notice. Check schedule details, eligibility criteria, and use verified portal links below.
-        </p>
-        <div style='background:{theme_color}; color:#ffffff; padding:10px 14px; font-weight:bold; font-size:16px; border-radius:6px; margin-bottom:12px;'>
-          Official Important Links
-        </div>
-        <table style='width:100%; border-collapse:collapse; margin-bottom:20px;'>
-          <tr style='border-bottom:1px solid #e2e8f0;'>
-            <td style='padding:14px 10px; font-weight:700; color:#0f172a;'>Official Notification &amp; Application Portal</td>
-            <td style='padding:14px 10px; text-align:right;'>
-              <a href='{link}' target='_blank' rel='noopener noreferrer' style='background:{theme_color}; color:#ffffff; padding:8px 18px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:13.5px; display:inline-block;'>Open Direct Portal &#8599;</a>
-            </td>
-          </tr>
-        </table>
-        <div style='padding:14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;'>
-          <p style='margin:0; font-size:13.5px; color:#1e40af; line-height:1.5;'>
-            &#128204; <strong>Note:</strong> Online form apply karne se pehle official PDF circular zaroor padhein.
-          </p>
-        </div>
-      </div>
-    </div>
-    """
+    return categories
 
 # ==================== MAIN EXECUTION ====================
 def run():
     print(f"Connecting to Blogger API (Blog ID: {BLOG_ID})...")
     service = get_blogger_service()
 
-    posts_res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=300).execute()
+    posts_res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=250).execute()
     existing_titles = {clean_text(p.get('title', '')).lower() for p in posts_res.get('items', [])}
-    print(f"Loaded {len(existing_titles)} existing posts from Blogger.")
+    print(f"Loaded {len(existing_titles)} existing posts.")
 
     published_cache = load_published_cache()
-    print(f"Loaded {len(published_cache)} cached records.")
 
-    print("\nFetching Live Updates from sarkariresult.com.cm...")
     url = f"https://sarkariresult.com.cm/?_t={int(time.time())}"
     r = SESSION.get(url, timeout=12)
     if r.status_code != 200:
-        print(f"Failed to fetch source: HTTP {r.status_code}")
+        print("Failed to fetch source homepage.")
         return
 
     soup = BeautifulSoup(r.text, 'html.parser')
-    category_map = extract_all_sections_accurately(soup)
+    categorized_data = extract_categorized_posts(soup)
 
-    publish_order = ["Latest Jobs", "Admit Card", "Result", "Answer Key", "Syllabus"]
-    published_count = 0
+    settings = [
+        {"cat": "Admit Card", "color": "#004085", "limit": 4},
+        {"cat": "Latest Jobs", "color": "#155724", "limit": 6},
+        {"cat": "Result", "color": "#b30000", "limit": 4},
+        {"cat": "Answer Key", "color": "#6f42c1", "limit": 3},
+        {"cat": "Syllabus", "color": "#d35400", "limit": 3}
+    ]
 
-    for cat in publish_order:
-        items = category_map.get(cat, [])
+    total_published = 0
+
+    for s in settings:
+        cat_name = s["cat"]
+        items = categorized_data.get(cat_name, [])
+        cat_count = 0
+
         for title, link in items:
             t_low = title.lower()
-
             if t_low in existing_titles or link in published_cache:
                 continue
 
-            print(f"Publishing -> [{cat}] {title}")
-            html_content = build_clean_post_html(title, cat, link)
-            seo_desc = f"{title}: Check notification details, eligibility and official portal links."[:150]
+            print(f"Publishing -> [{cat_name}] {title}")
+            parsed_data = parse_full_job_page(link)
+            post_html = build_accurate_html(title, cat_name, parsed_data, border_color=s["color"])
 
             body = {
                 "title": title,
-                "content": html_content,
-                "labels": [cat],
-                "searchDescription": seo_desc
+                "content": post_html,
+                "labels": [cat_name],
+                "searchDescription": f"{title} official recruitment dates, eligibility and direct links."[:150]
             }
 
             try:
@@ -258,20 +365,18 @@ def run():
                 print("  ✔ Successfully Published!")
                 published_cache.add(link)
                 existing_titles.add(t_low)
-                published_count += 1
+                total_published += 1
+                cat_count += 1
                 time.sleep(2)
 
-                if published_count >= 8:
+                if cat_count >= s["limit"]:
                     break
             except Exception as e:
-                print(f"  ✖ Publish Error on '{title}': {e}")
+                print(f"  ✖ Insert error: {e}")
                 continue
 
-        if published_count >= 8:
-            break
-
     save_published_cache(published_cache)
-    print(f"\nCompleted! Total fresh posts published: {published_count}")
+    print(f"\nCompleted! Total fresh posts published: {total_published}")
 
 if __name__ == "__main__":
     run()
