@@ -43,7 +43,7 @@ def load_published_cache():
 
 def save_published_cache(cache_set):
     try:
-        cache_list = list(cache_set)[-600:]
+        cache_list = list(cache_set)[-800:]
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(cache_list, f, indent=2)
     except Exception as e:
@@ -72,7 +72,6 @@ def normalize_key(text):
     return re.sub(r'[^a-zA-Z0-9]', '', clean_text(text).lower())
 
 def fix_relative_url(base_url, link_url):
-    """Bina kisi library dependency ke relative URL ko full URL banata hai"""
     if not link_url:
         return ""
     u = link_url.strip()
@@ -80,7 +79,6 @@ def fix_relative_url(base_url, link_url):
         return u
     if u.startswith("//"):
         return "https:" + u
-    # Base domain extract karein
     m = re.match(r'^(https?://[^/]+)', base_url)
     domain = m.group(1) if m else "https://sarkariresult.com.cm"
     if u.startswith("/"):
@@ -91,7 +89,6 @@ def generate_banner_html(title, bg_color="#8b0000"):
     clean_t = safe_escape(title)
     line1 = clean_t[:55]
     line2 = clean_t[55:110] if len(clean_t) > 55 else ""
-
     badge_width = 290
     badge_x = (800 - badge_width) // 2
 
@@ -127,11 +124,10 @@ def generate_banner_html(title, bg_color="#8b0000"):
     </div>
     """
 
-# ==================== BULLETPROOF MULTI-LINK & DETAIL PARSER ====================
 def parse_full_job_page(url):
     data = {"dates": [], "fees": [], "age_text": "", "links": [], "vacancy_tables_html": ""}
     try:
-        r = SESSION.get(url, timeout=15)
+        r = SESSION.get(url, timeout=10)
         if r.status_code != 200:
             data["links"] = [{"label": "Official Notification & Direct Link", "url": url}]
             return data
@@ -141,19 +137,19 @@ def parse_full_job_page(url):
         data["links"] = [{"label": "Official Notification & Direct Link", "url": url}]
         return data
 
-    # 1. Dates & Fees (Isolated Try Block)
+    # 1. Dates & Fees
     try:
         for ul in soup.find_all('ul'):
             lis = [safe_escape(li.get_text()) for li in ul.find_all('li')]
             block = " ".join(lis).lower()
-            if any(k in block for k in ["application begin", "last date", "start date", "notification date", "exam date", "online apply"]):
+            if any(k in block for k in ["application begin", "last date", "start date", "notification date", "exam date", "admit card"]):
                 if not data["dates"]: data["dates"] = lis
             elif any(k in block for k in ["general", "obc", "sc / st", "application fee", "no fee", "payment mode"]):
                 if not data["fees"]: data["fees"] = lis
     except Exception as e:
-        print(f"  [Dates/Fees Parse Warning] {e}")
+        pass
 
-    # 2. Age Details (Isolated Try Block)
+    # 2. Age Details
     try:
         for p in soup.find_all(['p', 'div', 'td', 'li']):
             raw_t = clean_text(p.get_text(separator=' '))
@@ -163,14 +159,13 @@ def parse_full_job_page(url):
                 data["age_text"] = safe_escape(raw_t)
                 break
     except Exception as e:
-        print(f"  [Age Parse Warning] {e}")
+        pass
 
-    # 3. Vacancy & Eligibility Tables (Isolated Try Block)
+    # 3. Vacancy & Eligibility Tables
     try:
         extracted_tables = []
         for tbl in soup.find_all('table'):
             tbl_text = clean_text(tbl.get_text()).lower()
-            # Skip table if it is the Important Links table
             if "important links" in tbl_text or "apply online" in tbl_text:
                 if not any(k in tbl_text for k in ["post name", "total post", "vacancy details"]):
                     continue
@@ -179,7 +174,6 @@ def parse_full_job_page(url):
                 clean_table_rows = []
                 for tr in tbl.find_all('tr'):
                     tr_text_low = clean_text(tr.get_text()).lower()
-                    # Agar kisi row me click here ya apply online link hai toh use vacancy table me mat dalo
                     if any(bad in tr_text_low for bad in ["apply online", "download notification", "official website", "click here", "join telegram", "whatsapp"]):
                         continue
                     cells = tr.find_all(['th', 'td'])
@@ -199,20 +193,18 @@ def parse_full_job_page(url):
         if extracted_tables:
             data["vacancy_tables_html"] = "".join(extracted_tables[:3])
     except Exception as e:
-        print(f"  [Table Parse Warning] {e}")
+        pass
 
-    # 4. MULTI-LINK EXTRACTION ENGINE (Isolated Try Block - Captures ALL Important Links)
+    # 4. Multi-Link Extractor
     found_links = []
     seen_entries = set()
 
     def add_link_entry(label_text, raw_href):
-        if not raw_href:
-            return
+        if not raw_href: return
         full_u = fix_relative_url(url, raw_href)
         ul = full_u.lower()
         ll = label_text.lower()
 
-        # Block social media, apps, and junk links
         bad_domains = [
             "whatsapp.com", "t.me", "telegram.me", "telegram.org",
             "facebook.com", "instagram.com", "twitter.com", "youtube.com",
@@ -220,10 +212,9 @@ def parse_full_job_page(url):
         ]
         if any(b in ul for b in bad_domains) or full_u.endswith("#"):
             return
-        if any(b in ll for b in ["telegram", "whatsapp", "app", "channel", "follow", "join", "sarkari result", "sarkariresult", "tools", "home"]):
+        if any(b in ll for b in ["telegram", "whatsapp", "app", "channel", "follow", "join", "sarkari result", "sarkariresult"]):
             return
 
-        # Clean label
         clean_lbl = safe_escape(re.sub(r'(click here|link|download|check)$', '', label_text, flags=re.IGNORECASE).strip(" :-|"))
         if not clean_lbl or len(clean_lbl) < 3:
             clean_lbl = safe_escape(label_text)
@@ -234,22 +225,17 @@ def parse_full_job_page(url):
             found_links.append({"label": clean_lbl, "url": full_u})
 
     try:
-        # Strategy A: Scan ALL table rows (<tr>) across the page for Action Links
         for tr in soup.find_all('tr'):
             cells = tr.find_all(['td', 'th'])
             if len(cells) >= 2:
                 left_label = clean_text(cells[0].get_text())
                 left_low = left_label.lower()
-
-                # Check if left cell looks like an Important Link row
                 important_keywords = [
                     "apply", "online", "registration", "login", "notification", "advt",
                     "advertisement", "official", "website", "admit card", "result",
-                    "answer key", "syllabus", "cutoff", "cut off", "merit", "score",
-                    "notice", "date extend", "corrigendum", "eligibil", "vacancy", "pdf", "form"
+                    "answer key", "syllabus", "cutoff", "cut off", "score", "admit"
                 ]
                 if any(k in left_low for k in important_keywords) and len(left_label) < 95:
-                    # Collect all links in the remaining cells of this row
                     row_anchors = []
                     for c in cells[1:]:
                         row_anchors.extend(c.find_all('a', href=True))
@@ -257,7 +243,6 @@ def parse_full_job_page(url):
                     if len(row_anchors) == 1:
                         add_link_entry(left_label, row_anchors[0]['href'])
                     elif len(row_anchors) > 1:
-                        # Agar ek row me multiple links hain (e.g., "Apply Online" -> "Registration | Login" ya "Hindi | English")
                         for idx, a in enumerate(row_anchors[:4]):
                             sub_txt = clean_text(a.get_text())
                             if sub_txt and sub_txt.lower() not in ["click here", "link", "here"]:
@@ -266,45 +251,21 @@ def parse_full_job_page(url):
                                 combined_lbl = f"{left_label} (Link {idx+1})"
                             add_link_entry(combined_lbl, a['href'])
 
-        # Strategy B: Scan standalone links if table rows had fewer than 2 links
         if len(found_links) < 2:
             for a in soup.find_all('a', href=True):
                 at = clean_text(a.get_text())
                 atl = at.lower()
                 ah = a['href'].strip()
-
-                # Check parent text if anchor text is just "Click Here"
-                if atl in ["click here", "here", "download", "link"]:
-                    parent = a.find_parent(['p', 'li', 'div', 'td'])
-                    if parent:
-                        p_txt = clean_text(parent.get_text())
-                        p_txt = re.sub(r'click here|download|link', '', p_txt, flags=re.IGNORECASE).strip(" :-|")
-                        if 4 < len(p_txt) < 80:
-                            add_link_entry(p_txt, ah)
-                elif any(k in atl for k in ["apply online", "notification", "official website", "admit card", "result", "answer key", "syllabus"]):
+                if any(k in atl for k in ["apply online", "notification", "official website", "admit card", "result", "answer key"]):
                     if len(at) < 70:
                         add_link_entry(at, ah)
-
-        # Strategy C: Sniff Official Website URL written inside FAQ / Page Text
-        # (Jaise aapke SIB aur CWC screenshot ke FAQ me official URL text me likha tha)
-        page_text = soup.get_text(" ")
-        faq_urls = re.findall(r'https?://[a-zA-Z0-9\.\-]+(?:\.gov\.in|\.nic\.in|\.org\.in|\.ac\.in|\.com|\.in|\.org)(?:/[^\s"\'<>]*)?', page_text)
-        for fu in faq_urls:
-            fu_clean = fu.rstrip(".,;)")
-            if not any(bad in fu_clean.lower() for bad in ["sarkariresult", "google", "blogger", "wp.com", "wordpress", "cloudflare", "w3.org"]):
-                if not any("official" in x['label'].lower() for x in found_links):
-                    add_link_entry("Official Website Portal", fu_clean)
-                    break
-
     except Exception as e:
-        print(f"  [Links Extraction Warning] {e}")
+        pass
 
-    # Strategy D: Ensure at least one valid link exists
     if not found_links:
         found_links.append({"label": "Official Notification & Direct Link", "url": url})
 
     data["links"] = found_links[:10]
-    print(f"    -> Extracted {len(data['links'])} links for this post.")
     return data
 
 def build_accurate_html(title, category_name, parsed, fallback_source_url="", border_color="#8b0000"):
@@ -358,125 +319,29 @@ def build_accurate_html(title, category_name, parsed, fallback_source_url="", bo
     </div>
     """
 
-# ==================== STEP 1 & 2: OFFICIAL BOARDS ENGINE ====================
-class GovernmentNoticesEngine:
-    def __init__(self):
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-        }
-        self.timeout = 12
-
-    def fetch_upsc(self):
-        items = []
-        try:
-            url = "https://upsc.gov.in/whats-new"
-            res = requests.get(url, headers=self.headers, timeout=self.timeout, verify=False)
-            if res.status_code == 200:
-                soup = BeautifulSoup(res.text, "html.parser")
-                for r in soup.select(".view-content .views-row")[:3]:
-                    link_tag = r.find("a")
-                    if link_tag and link_tag.get("href"):
-                        title = clean_text(link_tag.text)
-                        if len(title) > 15:
-                            href = link_tag["href"]
-                            full_url = href if href.startswith("http") else f"https://upsc.gov.in{href}"
-                            items.append({"title": f"UPSC: {title}", "url": full_url, "portal": "https://upsconline.nic.in/", "category": "Latest Jobs", "color": "#8b0000"})
-        except Exception as e:
-            print(f"[Direct Engine] UPSC check skipped: {e}")
-        return items
-
-    def fetch_ssc(self):
-        items = []
-        try:
-            url = "https://ssc.gov.in/"
-            res = requests.get(url, headers=self.headers, timeout=self.timeout)
-            if res.status_code == 200:
-                soup = BeautifulSoup(res.text, "html.parser")
-                for a in soup.select("ul.notices-list li a")[:3]:
-                    title = clean_text(a.text)
-                    href = a.get("href", "")
-                    if len(title) > 15 and href:
-                        full_url = href if href.startswith("http") else f"https://ssc.gov.in{href}"
-                        items.append({"title": f"SSC Notice: {title}", "url": full_url, "portal": "https://ssc.gov.in/", "category": "Latest Jobs", "color": "#155724"})
-        except Exception as e:
-            print(f"[Direct Engine] SSC check skipped: {e}")
-        return items
-
-    def fetch_upsssc(self):
-        items = []
-        try:
-            url = "http://upsssc.gov.in/"
-            res = requests.get(url, headers=self.headers, timeout=self.timeout, verify=False)
-            if res.status_code == 200:
-                soup = BeautifulSoup(res.text, "html.parser")
-                for a in soup.select(".notice-board a")[:3]:
-                    title = clean_text(a.text)
-                    href = a.get("href", "")
-                    if len(title) > 18 and href:
-                        full_url = href if href.startswith("http") else f"http://upsssc.gov.in/{href}"
-                        items.append({"title": f"UPSSSC: {title}", "url": full_url, "portal": "http://upsssc.gov.in/", "category": "Latest Jobs", "color": "#004085"})
-        except Exception as e:
-            print(f"[Direct Engine] UPSSSC check skipped: {e}")
-        return items
-
-    def fetch_bpsc(self):
-        items = []
-        try:
-            url = "https://www.bpsc.bih.nic.in/"
-            res = requests.get(url, headers=self.headers, timeout=self.timeout, verify=False)
-            if res.status_code == 200:
-                soup = BeautifulSoup(res.text, "html.parser")
-                for r in soup.select("table tr")[:4]:
-                    a = r.find("a")
-                    if a and a.get("href"):
-                        title = clean_text(r.text)
-                        if len(title) > 18:
-                            href = a["href"]
-                            full_url = href if href.startswith("http") else f"https://www.bpsc.bih.nic.in/{href}"
-                            items.append({"title": f"BPSC: {title}", "url": full_url, "portal": "https://onlinebpsc.bihar.gov.in/", "category": "Latest Jobs", "color": "#b30000"})
-        except Exception as e:
-            print(f"[Direct Engine] BPSC check skipped: {e}")
-        return items
-
-    def get_all_direct_notices(self):
-        notices = []
-        notices.extend(self.fetch_upsc())
-        notices.extend(self.fetch_ssc())
-        notices.extend(self.fetch_upsssc())
-        notices.extend(self.fetch_bpsc())
-        return notices
-
-# ==================== VALIDATION & PARSING (SECONDARY SOURCE) ====================
+# ==================== YEAR & RELEVANCE FILTER (FIXES 2025 BUG) ====================
 def is_valid_real_job(title, href):
     t_clean = clean_text(title)
     tl = t_clean.lower()
     hl = href.lower()
 
-    words = t_clean.split()
-    if len(words) < 4:
+    if len(t_clean) < 14:
         return False
 
-    if len(t_clean) < 18:
+    # 1. STRICT YEAR FILTER (Blocks 2025, 2024, etc.)
+    outdated_years = ["2025", "2024", "2023", "2022", "2021", "2020"]
+    if any(y in tl for y in outdated_years) or any(f"-{y}" in hl or f"_{y}" in hl for y in outdated_years):
         return False
 
+    # 2. BLOCKED SYSTEM LINKS
     forbidden_tokens = [
-        "sarkari result", "sarkariresult", "bharat result", "skip to content",
+        "sarkari result", "sarkariresult", "skip to content",
         "result tools", "tools", "instagram", "telegram", "whatsapp",
         "facebook", "twitter", "youtube", "contact us", "privacy policy",
-        "disclaimer", "about us", "admission", "view more", "more...", "see all",
-        "home", "certificate verification", "pan card", "voter id"
+        "disclaimer", "about us", "admission", "view more", "home"
     ]
     if any(bad in tl for bad in forbidden_tokens):
         return False
-
-    generic_tag_patterns = [
-        r'^[a-z\s]+police\s+result$',
-        r'^[a-z\s]+police\s+admit\s+card$',
-        r'^[a-z\s]+board\s+result$'
-    ]
-    for pattern in generic_tag_patterns:
-        if re.match(pattern, tl.strip()):
-            return False
 
     unwanted_url_slugs = ["/tools", "/p/", "privacy-policy", "disclaimer", "contact-us", "about-us", "/category/"]
     if any(bad in hl for bad in unwanted_url_slugs):
@@ -499,91 +364,61 @@ def extract_all_categories_from_homepage(soup):
 
         tl, hl = t.lower(), h.lower()
 
-        if "answer key" in tl or "/answer-key" in hl or "ans key" in tl:
-            if not any(x[0] == t for x in cat_map["Answer Key"]): cat_map["Answer Key"].append((t, h))
-        elif "syllabus" in tl or "/syllabus" in hl or "pattern" in tl:
-            if not any(x[0] == t for x in cat_map["Syllabus"]): cat_map["Syllabus"].append((t, h))
-        elif any(k in tl for k in ["result", "marks", "score", "merit"]) or "/result" in hl:
-            if not any(x[0] == t for x in cat_map["Result"]): cat_map["Result"].append((t, h))
-        elif any(k in tl for k in ["admit", "hall ticket", "city", "date"]) or "/admit" in hl:
-            if not any(x[0] == t for x in cat_map["Admit Card"]): cat_map["Admit Card"].append((t, h))
+        # 1. Answer Key Priority Check
+        if "answer key" in tl or "ans key" in tl or "/answer-key" in hl:
+            if not any(x[0] == t for x in cat_map["Answer Key"]): 
+                cat_map["Answer Key"].append((t, h))
+
+        # 2. Syllabus Priority Check
+        elif "syllabus" in tl or "/syllabus" in hl:
+            if not any(x[0] == t for x in cat_map["Syllabus"]): 
+                cat_map["Syllabus"].append((t, h))
+
+        # 3. Result Priority Check
+        elif any(k in tl for k in ["result", "marks", "score card", "merit list"]) or "/result" in hl:
+            if not any(x[0] == t for x in cat_map["Result"]): 
+                cat_map["Result"].append((t, h))
+
+        # 4. Strict Admit Card Check (Sirf Admit Card / Hall Ticket hona chahiye)
+        elif any(k in tl for k in ["admit card", "hall ticket", "call letter"]) or "/admit" in hl:
+            # Agar 'exam date' ke sath 'admit card' nahi likha hai, toh ye admit card nahi hai
+            if not any(x[0] == t for x in cat_map["Admit Card"]): 
+                cat_map["Admit Card"].append((t, h))
+
+        # 5. Latest Jobs (Exam Date, Online Form, Recruitment, Vacancy etc.)
         else:
-            if not any(x[0] == t for x in cat_map["Latest Jobs"]): cat_map["Latest Jobs"].append((t, h))
+            if not any(x[0] == t for x in cat_map["Latest Jobs"]): 
+                cat_map["Latest Jobs"].append((t, h))
 
     return cat_map
 
-# ==================== MAIN EXECUTION PIPELINE ====================
+# ==================== MAIN EXECUTION ====================
 def run():
     print(f"Connecting to Blogger API (Blog ID: {BLOG_ID})...")
     service = get_blogger_service()
 
     posts_res = service.posts().list(blogId=BLOG_ID, status=['DRAFT', 'LIVE'], maxResults=300).execute()
-    existing_titles = [clean_text(p.get('title', '')).lower() for p in posts_res.get('items', [])]
-    existing_norm_keys = {normalize_key(t) for t in existing_titles}
-    print(f"Loaded {len(existing_titles)} existing post titles from Blogger.")
+    # Sirf EXACT title comparison rakhenge taaki 'Exam Date' ke baad 'Admit Card' aane par block na ho
+    existing_titles_exact = {clean_text(p.get('title', '')).lower() for p in posts_res.get('items', [])}
+    print(f"Loaded {len(existing_titles_exact)} existing posts from Blogger.")
 
     published_cache = load_published_cache()
-    print(f"Loaded {len(published_cache)} cached records from {CACHE_FILE}.")
+    print(f"Loaded {len(published_cache)} cached URLs.")
 
     total_created = 0
 
-    # ------------------ STAGE 1: DIRECT OFFICIAL BOARDS ------------------
-    print("\n[STAGE 1] Checking Direct Official Boards (SSC, UPSC, UPSSSC, BPSC)...")
-    direct_engine = GovernmentNoticesEngine()
-    official_notices = direct_engine.get_all_direct_notices()
-    print(f"Found {len(official_notices)} direct alerts from government portals.")
-
-    for item in official_notices:
-        t_clean = clean_text(item["title"])
-        n_key = normalize_key(t_clean)
-        post_link = item["url"]
-        portal_link = item.get("portal", post_link)
-
-        if post_link in published_cache or n_key in existing_norm_keys:
-            continue
-
-        print(f"  [Publishing DIRECT Official Notice] {t_clean}")
-        parsed = {
-            "dates": ["Status: Direct Official Board Release", "Notice Date: Current Active Circular"],
-            "fees": ["Application Fee: As specified in official notification PDF"],
-            "age_text": "Candidate must check minimum and maximum age criteria in the official circular PDF.",
-            "vacancy_tables_html": "",
-            "links": [
-                {"label": "Download Official Notification / Circular", "url": post_link},
-                {"label": "Apply Online / Official Board Portal", "url": portal_link}
-            ]
-        }
-        content_html = build_accurate_html(t_clean, item["category"], parsed, fallback_source_url=post_link, border_color=item["color"])
-        seo_desc = f"{t_clean}: Direct official notice, application form, and notification PDF."[:150]
-
-        body = {
-            "title": t_clean,
-            "content": content_html,
-            "labels": [item["category"], "Official Notice"],
-            "searchDescription": seo_desc
-        }
-
-        try:
-            created = service.posts().insert(blogId=BLOG_ID, body=body, isDraft=False).execute()
-            print(f"  -> SUCCESS (Official): {created.get('title')}")
-            published_cache.add(post_link)
-            existing_norm_keys.add(n_key)
-            total_created += 1
-            time.sleep(3)
-        except Exception as e:
-            print(f"  -> Official Insert Error: {e}")
-
-    # ------------------ STAGE 2: SECONDARY RECRUITMENT BACKUP ------------------
-    print("\n[STAGE 2] Checking Secondary Source for Deep Details & Full Tables...")
+    print("\nFetching Live Updates from Primary Portal (sarkariresult.com.cm)...")
     url = f"https://sarkariresult.com.cm/?_t={int(time.time())}"
     try:
-        r = SESSION.get(url, timeout=15)
+        r = SESSION.get(url, timeout=12)
         if r.status_code == 200:
             soup = BeautifulSoup(r.text, 'html.parser')
             extracted_data = extract_all_categories_from_homepage(soup)
+            
+            # Prioritize Admit Card & Result updates first!
             category_settings = [
-                {"key": "Result", "label": "Result", "color": "#b30000", "limit": 4},
-                {"key": "Admit Card", "label": "Admit Card", "color": "#004085", "limit": 4},
+                {"key": "Admit Card", "label": "Admit Card", "color": "#004085", "limit": 6},
+                {"key": "Result", "label": "Result", "color": "#b30000", "limit": 6},
                 {"key": "Latest Jobs", "label": "Latest Jobs", "color": "#155724", "limit": 6},
                 {"key": "Answer Key", "label": "Answer Key", "color": "#6f42c1", "limit": 4},
                 {"key": "Syllabus", "label": "Syllabus", "color": "#d35400", "limit": 4}
@@ -594,18 +429,20 @@ def run():
                 new_items = []
                 for title, link in raw_items:
                     clean_t = clean_text(title)
-                    n_key = normalize_key(clean_t)
-                    if link not in published_cache and n_key not in existing_norm_keys:
+                    t_low = clean_t.lower()
+
+                    # Exact Title aur Exact URL check (Allows 'Admit Card' even if 'Exam Date' was published earlier)
+                    if link not in published_cache and t_low not in existing_titles_exact:
                         new_items.append((clean_t, link))
 
                 if not new_items:
                     continue
 
                 for title, link in new_items[:cat["limit"]]:
-                    print(f"  [Publishing Secondary Job] {title}")
+                    print(f"  [Publishing Fresh Update] {title}")
                     parsed = parse_full_job_page(link)
                     content_html = build_accurate_html(title, cat['label'], parsed, fallback_source_url=link, border_color=cat['color'])
-                    seo_desc = f"{title}: Check official notification, dates, eligibility and direct links."[:150]
+                    seo_desc = f"{title}: Check notification, dates, eligibility and direct links."[:150]
 
                     body = {
                         "title": title,
@@ -618,22 +455,22 @@ def run():
                         created = service.posts().insert(blogId=BLOG_ID, body=body, isDraft=False).execute()
                         print(f"  -> SUCCESS: {created.get('title')}")
                         published_cache.add(link)
-                        existing_norm_keys.add(normalize_key(title))
+                        existing_titles_exact.add(title.lower())
                         total_created += 1
-                        time.sleep(3)
+                        time.sleep(2)
                     except Exception as e:
                         print(f"  -> Insert Error: {e}")
                         break
         else:
-            print(f"Secondary source responded with status {r.status_code}")
+            print(f"Target source HTTP Status: {r.status_code}")
     except Exception as e:
-        print(f"Secondary check encountered error: {e}")
+        print(f"Scraper error: {e}")
 
     save_published_cache(published_cache)
 
     print(f"\n==========================================")
-    print(f"COMPLETED! Total Fresh Posts Published: {total_created}")
-    print(f"Total Unique Records in Cache: {len(published_cache)}")
+    print(f"COMPLETED! Fresh 2026 Posts Published: {total_created}")
+    print(f"Total Unique URLs in Cache: {len(published_cache)}")
     print(f"==========================================")
 
 if __name__ == "__main__":
