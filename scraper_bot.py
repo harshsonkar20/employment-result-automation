@@ -66,63 +66,106 @@ def is_valid_real_job(title, href):
     tl = t.lower()
     hl = href.lower()
 
-    # 1. Reject Short or Junk Nav Strings
-    if len(t) < 16 or len(t.split()) < 3:
+    if len(t) < 14 or len(t.split()) < 3:
         return False
 
-    # 2. Permanent Blacklist for Menu/Static items
-    junk_exact = [
-        "skip to content", "sarkariresult.com.cm", "sarkari result", "bihar police result",
-        "up police result", "delhi police result", "mp police result", "police result",
-        "view more", "click here", "home", "contact us", "privacy policy", "disclaimer",
-        "about us", "tools", "admission", "certificate verification"
+    junk_items = [
+        "skip to content", "sarkariresult.com.cm", "sarkari result",
+        "bihar police result", "up police result", "delhi police result",
+        "mp police result", "police result", "view more", "click here",
+        "home", "contact us", "privacy policy", "disclaimer", "about us",
+        "tools", "admission", "certificate verification"
     ]
-    if any(j in tl for j in junk_exact) or tl in junk_exact:
+    if any(j in tl for j in junk_items) or tl in junk_items:
         return False
 
-    # 3. Strict Outdated Year Filter (Blocks 2025, 2024, etc.)
+    # 2025 and older blacklist
     outdated = ["2025", "2024", "2023", "2022", "2021", "2020"]
     if any(y in tl for y in outdated) or any(f"-{y}" in hl or f"_{y}" in hl for y in outdated):
         return False
 
-    # 4. Block Navigation or Category URLs
     if any(bad in hl for bad in ["/category/", "/tag/", "/tools", "/p/", "privacy-policy", "disclaimer"]):
         return False
 
     return True
 
-# ==================== CATEGORY CLASSIFIER ====================
-def determine_correct_category(title, href, source_box_hint=""):
-    tl = title.lower()
-    hl = href.lower()
+# ==================== STRUCTURAL SECTION EXTRACTOR ====================
+def extract_all_sections_accurately(soup):
+    category_map = {
+        "Result": [],
+        "Admit Card": [],
+        "Latest Jobs": [],
+        "Answer Key": [],
+        "Syllabus": []
+    }
 
-    # Priority 1: Answer Key
-    if "answer key" in tl or "ans key" in tl or "/answer-key" in hl:
-        return "Answer Key"
+    target_headings = {
+        "result": "Result",
+        "admit card": "Admit Card",
+        "latest job": "Latest Jobs",
+        "latest jobs": "Latest Jobs",
+        "answer key": "Answer Key",
+        "syllabus": "Syllabus"
+    }
 
-    # Priority 2: Syllabus
-    if "syllabus" in tl or "/syllabus" in hl:
-        return "Syllabus"
+    # Search in all potential containers
+    for tag in soup.find_all(['div', 'table', 'td', 'section']):
+        header_el = tag.find(['h2', 'h3', 'h4', 'th', 'b', 'strong'])
+        if not header_el:
+            continue
 
-    # Priority 3: Form / Recruitment Keywords -> ALWAYS "Latest Jobs"
-    # (Yeh rule JSSC Online form ya kisi bhi 'Last Date' ko Admit Card me jane se rokega)
-    if any(k in tl for k in ["online form", "apply online", "recruitment", "vacancy", "post online", "bharti", "exam date"]):
-        if "admit card" not in tl and "hall ticket" not in tl:
-            return "Latest Jobs"
+        header_text = header_el.get_text().strip().lower()
+        matched_category = None
 
-    # Priority 4: Admit Card (STRICT)
-    if any(k in tl for k in ["admit card", "hall ticket", "call letter"]) or "/admit" in hl:
-        return "Admit Card"
+        for key, cat_name in target_headings.items():
+            if key in header_text:
+                matched_category = cat_name
+                break
 
-    # Priority 5: Result (STRICT)
-    if any(k in tl for k in ["result", "marks", "score card", "merit list"]) or "/result" in hl:
-        return "Result"
+        if not matched_category:
+            continue
 
-    # Fallback to Box Hint or Latest Jobs
-    if source_box_hint in ["Result", "Admit Card", "Latest Jobs", "Answer Key", "Syllabus"]:
-        return source_box_hint
+        for a in tag.find_all('a', href=True):
+            t = clean_text(a.get_text())
+            h = a['href'].strip()
 
-    return "Latest Jobs"
+            if t.lower() in target_headings:
+                continue
+
+            if not h.startswith("http"):
+                h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
+
+            if not is_valid_real_job(t, h):
+                continue
+
+            item = (t, h)
+            if item not in category_map[matched_category]:
+                category_map[matched_category].append(item)
+
+    # Fallback if structure is flat: Keyword scan for missing lists
+    if not any(category_map.values()):
+        for a in soup.find_all('a', href=True):
+            t = clean_text(a.get_text())
+            h = a['href'].strip()
+            if not h.startswith("http"):
+                h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
+
+            if not is_valid_real_job(t, h):
+                continue
+
+            tl, hl = t.lower(), h.lower()
+            if "answer key" in tl or "/answer-key" in hl:
+                category_map["Answer Key"].append((t, h))
+            elif "syllabus" in tl or "/syllabus" in hl:
+                category_map["Syllabus"].append((t, h))
+            elif "result" in tl or "/result" in hl:
+                category_map["Result"].append((t, h))
+            elif "admit card" in tl or "/admit" in hl:
+                category_map["Admit Card"].append((t, h))
+            else:
+                category_map["Latest Jobs"].append((t, h))
+
+    return category_map
 
 # ==================== POST BODY GENERATOR ====================
 def build_clean_post_html(title, category_name, link):
@@ -166,14 +209,14 @@ def build_clean_post_html(title, category_name, link):
     </div>
     """
 
-# ==================== MAIN CRAWLER PIPELINE ====================
+# ==================== MAIN EXECUTION ====================
 def run():
     print(f"Connecting to Blogger API (Blog ID: {BLOG_ID})...")
     service = get_blogger_service()
 
-    posts_res = service.posts().list(blogId=BLOG_ID, status=['DRAFT', 'LIVE'], maxResults=300).execute()
+    posts_res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=300).execute()
     existing_titles = {clean_text(p.get('title', '')).lower() for p in posts_res.get('items', [])}
-    print(f"Loaded {len(existing_titles)} existing posts.")
+    print(f"Loaded {len(existing_titles)} existing posts from Blogger.")
 
     published_cache = load_published_cache()
     print(f"Loaded {len(published_cache)} cached records.")
@@ -186,65 +229,45 @@ def run():
         return
 
     soup = BeautifulSoup(r.text, 'html.parser')
-    candidates = []
+    category_map = extract_all_sections_accurately(soup)
 
-    # Har anchor ko inspect karein
-    for a in soup.find_all('a', href=True):
-        t = clean_text(a.get_text())
-        h = a['href'].strip()
-
-        if not h.startswith("http"):
-            h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
-
-        # Hard validation
-        if not is_valid_real_job(t, h):
-            continue
-
-        tl = t.lower()
-        if t.lower() in existing_titles or h in published_cache:
-            continue
-
-        # Correct Category Classification
-        cat = determine_correct_category(t, h)
-        candidates.append({"title": t, "url": h, "category": cat})
-
-    print(f"Discovered {len(candidates)} fresh & clean posts for 2026.")
-
-    # Deduplicate in batch
-    seen_in_run = set()
-    unique_candidates = []
-    for c in candidates:
-        if c['title'].lower() not in seen_in_run:
-            seen_in_run.add(c['title'].lower())
-            unique_candidates.append(c)
-
-    # Publish up to 6 fresh posts per execution to keep quota & index safe
+    publish_order = ["Latest Jobs", "Admit Card", "Result", "Answer Key", "Syllabus"]
     published_count = 0
-    for item in unique_candidates[:8]:
-        title = item["title"]
-        cat = item["category"]
-        link = item["url"]
 
-        print(f"Publishing -> [{cat}] {title}")
-        html_content = build_clean_post_html(title, cat, link)
-        seo_desc = f"{title}: Check notification details, eligibility and official portal links."[:150]
+    for cat in publish_order:
+        items = category_map.get(cat, [])
+        for title, link in items:
+            t_low = title.lower()
 
-        body = {
-            "title": title,
-            "content": html_content,
-            "labels": [cat],
-            "searchDescription": seo_desc
-        }
+            if t_low in existing_titles or link in published_cache:
+                continue
 
-        try:
-            service.posts().insert(blogId=BLOG_ID, body=body, isDraft=False).execute()
-            print("  ✔ Successfully Published!")
-            published_cache.add(link)
-            existing_titles.add(title.lower())
-            published_count += 1
-            time.sleep(2)
-        except Exception as e:
-            print(f"  ✖ Publish Error: {e}")
+            print(f"Publishing -> [{cat}] {title}")
+            html_content = build_clean_post_html(title, cat, link)
+            seo_desc = f"{title}: Check notification details, eligibility and official portal links."[:150]
+
+            body = {
+                "title": title,
+                "content": html_content,
+                "labels": [cat],
+                "searchDescription": seo_desc
+            }
+
+            try:
+                service.posts().insert(blogId=BLOG_ID, body=body, isDraft=False).execute()
+                print("  ✔ Successfully Published!")
+                published_cache.add(link)
+                existing_titles.add(t_low)
+                published_count += 1
+                time.sleep(2)
+
+                if published_count >= 8:
+                    break
+            except Exception as e:
+                print(f"  ✖ Publish Error on '{title}': {e}")
+                continue
+
+        if published_count >= 8:
             break
 
     save_published_cache(published_cache)
