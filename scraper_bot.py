@@ -60,188 +60,195 @@ def clean_text(text):
 def safe_escape(text):
     return html.escape(clean_text(text), quote=True)
 
-def generate_banner_html(title, bg_color="#0f172a"):
-    clean_t = safe_escape(title)
-    line1 = clean_t[:55]
-    line2 = clean_t[55:110] if len(clean_t) > 55 else ""
-    return f"""
-    <div style="text-align: center; margin-bottom: 20px;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" style="width: 100%; max-width: 800px; height: auto; border-radius: 8px;">
-        <rect width="800" height="380" fill="{bg_color}" rx="8"/>
-        <text x="400" y="44" fill="#ffffff" font-size="22" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle">★ {SITE_BRAND_NAME} NOTIFICATION ★</text>
-        <rect x="250" y="85" width="300" height="36" rx="18" fill="#ffcc00"/>
-        <text x="400" y="108" fill="#000000" font-size="14" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle">OFFICIAL UPDATE</text>
-        <text x="400" y="180" fill="#ffffff" font-size="22" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle">{line1}</text>
-        <text x="400" y="220" fill="#ffffff" font-size="20" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle">{line2}</text>
-      </svg>
-    </div>
-    """
+# ==================== STRICT ZERO-TOLERANCE FILTER ====================
+def is_valid_real_job(title, href):
+    t = clean_text(title)
+    tl = t.lower()
+    hl = href.lower()
 
-def parse_full_job_page(url):
-    data = {"dates": [], "fees": [], "age_text": "", "links": [], "vacancy_tables_html": ""}
-    try:
-        r = SESSION.get(url, timeout=8)
-        if r.status_code != 200:
-            data["links"] = [{"label": "Official Notification Link", "url": url}]
-            return data
-        soup = BeautifulSoup(r.text, 'html.parser')
-    except Exception:
-        data["links"] = [{"label": "Official Notification Link", "url": url}]
-        return data
-
-    try:
-        for ul in soup.find_all('ul'):
-            lis = [safe_escape(li.get_text()) for li in ul.find_all('li')]
-            b = " ".join(lis).lower()
-            if any(k in b for k in ["application begin", "last date", "start date", "exam date"]):
-                if not data["dates"]: data["dates"] = lis
-            elif any(k in b for k in ["general", "obc", "sc / st", "fee"]):
-                if not data["fees"]: data["fees"] = lis
-    except Exception:
-        pass
-
-    try:
-        for p in soup.find_all(['p', 'div', 'td']):
-            raw_t = clean_text(p.get_text())
-            if "minimum age" in raw_t.lower() and len(raw_t) < 400:
-                data["age_text"] = safe_escape(raw_t)
-                break
-    except Exception:
-        pass
-
-    found_links = []
-    try:
-        for tr in soup.find_all('tr'):
-            cells = tr.find_all(['td', 'th'])
-            if len(cells) >= 2:
-                lbl = clean_text(cells[0].get_text())
-                if any(k in lbl.lower() for k in ["apply", "notification", "official", "admit", "result", "answer"]):
-                    a = cells[1].find('a', href=True)
-                    if a and a['href'].startswith('http'):
-                        found_links.append({"label": safe_escape(lbl), "url": a['href']})
-    except Exception:
-        pass
-
-    if not found_links:
-        found_links.append({"label": "Official Notification & Details", "url": url})
-    data["links"] = found_links[:6]
-    return data
-
-def build_html(title, cat, parsed, border_color="#2563eb"):
-    clean_title = safe_escape(title)
-    dates_html = "".join([f"<li>{d}</li>" for d in parsed.get("dates", [])[:5]]) or "<li>Status: Active Update</li>"
-    fees_html = "".join([f"<li>{f}</li>" for f in parsed.get("fees", [])[:5]]) or "<li>As per official rules</li>"
-    
-    link_rows = ""
-    for lk in parsed.get("links", []):
-        link_rows += f"<tr><td style='border:1px solid #ddd; padding:10px; font-weight:bold;'>{lk['label']}</td><td style='border:1px solid #ddd; padding:10px; text-align:center;'><a href='{lk['url']}' target='_blank' style='background:{border_color}; color:#fff; padding:6px 14px; text-decoration:none; border-radius:4px; font-weight:bold;'>Click Here</a></td></tr>"
-
-    return f"""
-    <div style='font-family: Arial, sans-serif; max-width:850px; margin:0 auto; border:1px solid #ddd; padding:15px;'>
-      {generate_banner_html(title, border_color)}
-      <h2 style='background:{border_color}; color:#fff; text-align:center; padding:10px; font-size:18px;'>{clean_title}</h2>
-      <table style='width:100%; border-collapse:collapse; margin:15px 0;'>
-        <tr>
-          <td style='width:50%; vertical-align:top; padding:10px; border:1px solid #ddd;'>
-            <b style='color:{border_color};'>Important Dates:</b>
-            <ul style='padding-left:18px; margin-top:5px;'>{dates_html}</ul>
-          </td>
-          <td style='width:50%; vertical-align:top; padding:10px; border:1px solid #ddd;'>
-            <b style='color:#0f172a;'>Application Fee:</b>
-            <ul style='padding-left:18px; margin-top:5px;'>{fees_html}</ul>
-          </td>
-        </tr>
-      </table>
-      <div style='padding:10px; background:#f8fafc; border:1px solid #ddd; margin-bottom:15px;'>
-        <b>Age Limit & Eligibility:</b>
-        <p style='margin:5px 0 0 0;'>{parsed.get("age_text") or "Check official notification PDF."}</p>
-      </div>
-      <h3 style='background:#0f172a; color:#fff; text-align:center; padding:8px; font-size:16px;'>Important Links</h3>
-      <table style='width:100%; border-collapse:collapse;'>{link_rows}</table>
-    </div>
-    """
-
-def is_valid(title, href):
-    tl = title.lower()
-    # 2025 block rule
-    if any(y in tl for y in ["2025", "2024", "2023"]):
+    # 1. Reject Short or Junk Nav Strings
+    if len(t) < 16 or len(t.split()) < 3:
         return False
-    if len(title) < 14:
+
+    # 2. Permanent Blacklist for Menu/Static items
+    junk_exact = [
+        "skip to content", "sarkariresult.com.cm", "sarkari result", "bihar police result",
+        "up police result", "delhi police result", "mp police result", "police result",
+        "view more", "click here", "home", "contact us", "privacy policy", "disclaimer",
+        "about us", "tools", "admission", "certificate verification"
+    ]
+    if any(j in tl for j in junk_exact) or tl in junk_exact:
         return False
-    if any(b in tl for b in ["sarkari result", "tools", "telegram", "whatsapp", "about us", "contact"]):
+
+    # 3. Strict Outdated Year Filter (Blocks 2025, 2024, etc.)
+    outdated = ["2025", "2024", "2023", "2022", "2021", "2020"]
+    if any(y in tl for y in outdated) or any(f"-{y}" in hl or f"_{y}" in hl for y in outdated):
         return False
+
+    # 4. Block Navigation or Category URLs
+    if any(bad in hl for bad in ["/category/", "/tag/", "/tools", "/p/", "privacy-policy", "disclaimer"]):
+        return False
+
     return True
 
-def run():
-    print("Connecting to Blogger...")
-    service = get_blogger_service()
-    posts_res = service.posts().list(blogId=BLOG_ID, status=['DRAFT', 'LIVE'], maxResults=250).execute()
-    existing_titles = {clean_text(p.get('title', '')).lower() for p in posts_res.get('items', [])}
-    published_cache = load_published_cache()
+# ==================== CATEGORY CLASSIFIER ====================
+def determine_correct_category(title, href, source_box_hint=""):
+    tl = title.lower()
+    hl = href.lower()
 
-    print("Fetching SarkariResult Directly (No Slow Govt Sites)...")
+    # Priority 1: Answer Key
+    if "answer key" in tl or "ans key" in tl or "/answer-key" in hl:
+        return "Answer Key"
+
+    # Priority 2: Syllabus
+    if "syllabus" in tl or "/syllabus" in hl:
+        return "Syllabus"
+
+    # Priority 3: Form / Recruitment Keywords -> ALWAYS "Latest Jobs"
+    # (Yeh rule JSSC Online form ya kisi bhi 'Last Date' ko Admit Card me jane se rokega)
+    if any(k in tl for k in ["online form", "apply online", "recruitment", "vacancy", "post online", "bharti", "exam date"]):
+        if "admit card" not in tl and "hall ticket" not in tl:
+            return "Latest Jobs"
+
+    # Priority 4: Admit Card (STRICT)
+    if any(k in tl for k in ["admit card", "hall ticket", "call letter"]) or "/admit" in hl:
+        return "Admit Card"
+
+    # Priority 5: Result (STRICT)
+    if any(k in tl for k in ["result", "marks", "score card", "merit list"]) or "/result" in hl:
+        return "Result"
+
+    # Fallback to Box Hint or Latest Jobs
+    if source_box_hint in ["Result", "Admit Card", "Latest Jobs", "Answer Key", "Syllabus"]:
+        return source_box_hint
+
+    return "Latest Jobs"
+
+# ==================== POST BODY GENERATOR ====================
+def build_clean_post_html(title, category_name, link):
+    clean_t = safe_escape(title)
+    color_map = {
+        "Result": "#dc2626",
+        "Admit Card": "#2563eb",
+        "Latest Jobs": "#16a34a",
+        "Answer Key": "#9333ea",
+        "Syllabus": "#ea580c"
+    }
+    theme_color = color_map.get(category_name, "#2563eb")
+
+    return f"""
+    <div style='font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; max-width:850px; margin:0 auto; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; background:#ffffff;'>
+      <div style='background:{theme_color}; color:#ffffff; padding:18px; text-align:center;'>
+        <div style='font-size:13px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;'>★ {SITE_BRAND_NAME} NOTIFICATION ★</div>
+        <h1 style='font-size:22px; margin:10px 0 0 0; font-weight:800;'>{clean_t}</h1>
+      </div>
+      <div style='padding:22px;'>
+        <p style='font-size:14.5px; line-height:1.7; color:#334155; margin-bottom:20px; background:#f8fafc; padding:14px; border-left:4px solid {theme_color}; border-radius:4px;'>
+          <strong>{clean_t}:</strong> Recruitment and exam conducting authorities have released this official notice. Check schedule details, eligibility criteria, and use verified portal links below.
+        </p>
+        <div style='background:{theme_color}; color:#ffffff; padding:10px 14px; font-weight:bold; font-size:16px; border-radius:6px; margin-bottom:12px;'>
+          Official Important Links
+        </div>
+        <table style='width:100%; border-collapse:collapse; margin-bottom:20px;'>
+          <tr style='border-bottom:1px solid #e2e8f0;'>
+            <td style='padding:14px 10px; font-weight:700; color:#0f172a;'>Official Notification &amp; Application Portal</td>
+            <td style='padding:14px 10px; text-align:right;'>
+              <a href='{link}' target='_blank' rel='noopener noreferrer' style='background:{theme_color}; color:#ffffff; padding:8px 18px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:13.5px; display:inline-block;'>Open Direct Portal &#8599;</a>
+            </td>
+          </tr>
+        </table>
+        <div style='padding:14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;'>
+          <p style='margin:0; font-size:13.5px; color:#1e40af; line-height:1.5;'>
+            &#128204; <strong>Note:</strong> Online form apply karne se pehle official PDF circular zaroor padhein.
+          </p>
+        </div>
+      </div>
+    </div>
+    """
+
+# ==================== MAIN CRAWLER PIPELINE ====================
+def run():
+    print(f"Connecting to Blogger API (Blog ID: {BLOG_ID})...")
+    service = get_blogger_service()
+
+    posts_res = service.posts().list(blogId=BLOG_ID, status=['DRAFT', 'LIVE'], maxResults=300).execute()
+    existing_titles = {clean_text(p.get('title', '')).lower() for p in posts_res.get('items', [])}
+    print(f"Loaded {len(existing_titles)} existing posts.")
+
+    published_cache = load_published_cache()
+    print(f"Loaded {len(published_cache)} cached records.")
+
+    print("\nFetching Live Updates from sarkariresult.com.cm...")
     url = f"https://sarkariresult.com.cm/?_t={int(time.time())}"
-    r = SESSION.get(url, timeout=10)
+    r = SESSION.get(url, timeout=12)
     if r.status_code != 200:
-        print("Failed to access source")
+        print(f"Failed to fetch source: HTTP {r.status_code}")
         return
 
     soup = BeautifulSoup(r.text, 'html.parser')
-    cat_map = {"Admit Card": [], "Result": [], "Latest Jobs": []}
+    candidates = []
 
+    # Har anchor ko inspect karein
     for a in soup.find_all('a', href=True):
         t = clean_text(a.get_text())
         h = a['href'].strip()
+
         if not h.startswith("http"):
             h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
-        
-        if not is_valid(t, h):
+
+        # Hard validation
+        if not is_valid_real_job(t, h):
             continue
 
         tl = t.lower()
-        if "admit card" in tl or "hall ticket" in tl:
-            cat_map["Admit Card"].append((t, h))
-        elif "result" in tl or "score card" in tl:
-            cat_map["Result"].append((t, h))
-        else:
-            cat_map["Latest Jobs"].append((t, h))
+        if t.lower() in existing_titles or h in published_cache:
+            continue
 
-    total = 0
-    settings = [
-        ("Admit Card", "#2563eb", 5),
-        ("Result", "#dc2626", 5),
-        ("Latest Jobs", "#16a34a", 5)
-    ]
+        # Correct Category Classification
+        cat = determine_correct_category(t, h)
+        candidates.append({"title": t, "url": h, "category": cat})
 
-    for label, color, limit in settings:
-        items = cat_map.get(label, [])
-        for title, link in items:
-            if total >= 8: break
-            if link in published_cache or title.lower() in existing_titles:
-                continue
+    print(f"Discovered {len(candidates)} fresh & clean posts for 2026.")
 
-            print(f"Publishing: {title} [{label}]")
-            parsed = parse_full_job_page(link)
-            body = {
-                "title": title,
-                "content": build_html(title, label, parsed, color),
-                "labels": [label],
-                "searchDescription": f"{title} Notification, Exam Dates and Links."[:150]
-            }
+    # Deduplicate in batch
+    seen_in_run = set()
+    unique_candidates = []
+    for c in candidates:
+        if c['title'].lower() not in seen_in_run:
+            seen_in_run.add(c['title'].lower())
+            unique_candidates.append(c)
 
-            try:
-                service.posts().insert(blogId=BLOG_ID, body=body, isDraft=False).execute()
-                print(" -> Published!")
-                published_cache.add(link)
-                existing_titles.add(title.lower())
-                total += 1
-                time.sleep(1)
-            except Exception as e:
-                print(f"Error publishing: {e}")
-                break
+    # Publish up to 6 fresh posts per execution to keep quota & index safe
+    published_count = 0
+    for item in unique_candidates[:8]:
+        title = item["title"]
+        cat = item["category"]
+        link = item["url"]
+
+        print(f"Publishing -> [{cat}] {title}")
+        html_content = build_clean_post_html(title, cat, link)
+        seo_desc = f"{title}: Check notification details, eligibility and official portal links."[:150]
+
+        body = {
+            "title": title,
+            "content": html_content,
+            "labels": [cat],
+            "searchDescription": seo_desc
+        }
+
+        try:
+            service.posts().insert(blogId=BLOG_ID, body=body, isDraft=False).execute()
+            print("  ✔ Successfully Published!")
+            published_cache.add(link)
+            existing_titles.add(title.lower())
+            published_count += 1
+            time.sleep(2)
+        except Exception as e:
+            print(f"  ✖ Publish Error: {e}")
+            break
 
     save_published_cache(published_cache)
-    print(f"Finished! Total fresh posts: {total}")
+    print(f"\nCompleted! Total fresh posts published: {published_count}")
 
 if __name__ == "__main__":
     run()
