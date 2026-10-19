@@ -70,7 +70,7 @@ def fix_relative_url(base_url, link_url):
     if u.startswith("/"): return domain + u
     return domain + "/" + u
 
-def generate_banner_html(title, bg_color="#8b0000"):
+def generate_banner_html(title, bg_color="#004085"):
     clean_t = safe_escape(title)
     line1 = clean_t[:55]
     line2 = clean_t[55:110] if len(clean_t) > 55 else ""
@@ -109,7 +109,6 @@ def generate_banner_html(title, bg_color="#8b0000"):
     </div>
     """
 
-# ==================== PARSER: EXTRACTS REAL INNER LINKS & TABLES ====================
 def parse_full_job_page(url):
     data = {"dates": [], "fees": [], "age_text": "", "links": [], "vacancy_tables_html": ""}
     try:
@@ -117,8 +116,7 @@ def parse_full_job_page(url):
         if r.status_code != 200:
             return data
         soup = BeautifulSoup(r.text, 'html.parser')
-    except Exception as e:
-        print(f"  [Parse Error] {e}")
+    except Exception:
         return data
 
     # 1. Dates & Fees
@@ -133,7 +131,7 @@ def parse_full_job_page(url):
     except Exception:
         pass
 
-    # 2. Age limit
+    # 2. Age Details
     try:
         for p in soup.find_all(['p', 'div', 'td']):
             raw_t = clean_text(p.get_text(separator=' '))
@@ -179,7 +177,7 @@ def parse_full_job_page(url):
     except Exception:
         pass
 
-    # 4. Extract Real Direct Government Links (Skip SarkariResult URLs)
+    # 4. Official Direct Links Extraction (Filter out Competitor Redirects)
     found_links = []
     seen = set()
 
@@ -193,7 +191,7 @@ def parse_full_job_page(url):
                 for a in cells[1].find_all('a', href=True):
                     full_u = fix_relative_url(url, a['href'])
                     
-                    # BLOCK SarkariResult internal redirects and social networks
+                    # SarkariResult internal URLs aur social links block karein
                     if any(bad in full_u.lower() for bad in ["sarkariresult.com.cm", "t.me", "telegram", "whatsapp", "play.google.com"]):
                         continue
 
@@ -207,8 +205,7 @@ def parse_full_job_page(url):
     data["links"] = found_links[:8]
     return data
 
-# ==================== BUILD RICH PROFESSIONAL HTML ====================
-def build_accurate_html(title, category_name, parsed, fallback_source_url="", border_color="#8b0000"):
+def build_accurate_html(title, category_name, parsed, border_color="#004085"):
     clean_title = safe_escape(title)
     banner_header = generate_banner_html(title, border_color)
 
@@ -259,89 +256,59 @@ def build_accurate_html(title, category_name, parsed, fallback_source_url="", bo
     </div>
     """
 
-# ==================== HOMEPAGE SECTION-WISE SCRAPING ====================
-def extract_categorized_posts(soup):
-    categories = {
-        "Result": [],
-        "Admit Card": [],
-        "Latest Jobs": [],
-        "Answer Key": [],
-        "Syllabus": []
-    }
+# ==================== DEDICATED CATEGORY EXTRACTOR ====================
+def fetch_category_links(cat_url):
+    results = []
+    try:
+        r = SESSION.get(cat_url, timeout=12)
+        if r.status_code != 200:
+            return results
+        soup = BeautifulSoup(r.text, 'html.parser')
+    except Exception:
+        return results
 
-    # SarkariResult organizes homepage by panels/tables
-    for td in soup.find_all(['td', 'div']):
-        # Find exact header title
-        head = td.find(['h2', 'h3', 'th', 'b', 'span'])
-        if not head: continue
-        ht = head.get_text().strip().lower()
+    for a in soup.find_all('a', href=True):
+        t = clean_text(a.get_text())
+        h = a['href'].strip()
 
-        target_cat = None
-        if "admit card" in ht: target_cat = "Admit Card"
-        elif "result" in ht: target_cat = "Result"
-        elif "latest job" in ht: target_cat = "Latest Jobs"
-        elif "answer key" in ht: target_cat = "Answer Key"
-        elif "syllabus" in ht: target_cat = "Syllabus"
+        if not h.startswith("http"):
+            h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
 
-        if not target_cat: continue
+        tl = t.lower()
+        # Clean Junk Filters
+        if len(t) < 14 or "2025" in tl or "2024" in tl: continue
+        if any(bad in tl for bad in ["view more", "click here", "sarkari result", "skip to content", "privacy policy", "disclaimer"]): continue
+        if any(bad in h.lower() for bad in ["/category/", "/tag/", "/p/", "/tools"]): continue
 
-        for a in td.find_all('a', href=True):
-            t = clean_text(a.get_text())
-            h = a['href'].strip()
-
-            if not h.startswith("http"):
-                h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
-
-            tl = t.lower()
-            # Filters
-            if len(t) < 14 or "2025" in tl or "2024" in tl: continue
-            if any(bad in tl for bad in ["view more", "click here", "sarkari result", "skip to content"]): continue
-
-            # Cross-contamination safeguard: Form in Admit Card -> move to Latest Jobs
-            assigned_cat = target_cat
-            if target_cat == "Admit Card" and any(k in tl for k in ["online form", "apply online", "recruitment", "vacancy"]):
-                if "admit" not in tl:
-                    assigned_cat = "Latest Jobs"
-
-            item = (t, h)
-            if item not in categories[assigned_cat]:
-                categories[assigned_cat].append(item)
-
-    return categories
+        results.append((t, h))
+    return results
 
 # ==================== MAIN EXECUTION ====================
 def run():
     print(f"Connecting to Blogger API (Blog ID: {BLOG_ID})...")
     service = get_blogger_service()
 
-    posts_res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=250).execute()
+    posts_res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=300).execute()
     existing_titles = {clean_text(p.get('title', '')).lower() for p in posts_res.get('items', [])}
     print(f"Loaded {len(existing_titles)} existing posts.")
 
     published_cache = load_published_cache()
 
-    url = f"https://sarkariresult.com.cm/?_t={int(time.time())}"
-    r = SESSION.get(url, timeout=12)
-    if r.status_code != 200:
-        print("Failed to fetch source homepage.")
-        return
-
-    soup = BeautifulSoup(r.text, 'html.parser')
-    categorized_data = extract_categorized_posts(soup)
-
-    settings = [
-        {"cat": "Admit Card", "color": "#004085", "limit": 4},
-        {"cat": "Latest Jobs", "color": "#155724", "limit": 6},
-        {"cat": "Result", "color": "#b30000", "limit": 4},
-        {"cat": "Answer Key", "color": "#6f42c1", "limit": 3},
-        {"cat": "Syllabus", "color": "#d35400", "limit": 3}
+    # HAR CATEGORY KA DEDICATED URL (NO GUESSING, NO MIXING)
+    sources = [
+        {"cat": "Latest Jobs", "url": "https://sarkariresult.com.cm/latest-jobs/", "color": "#155724", "limit": 6},
+        {"cat": "Admit Card", "url": "https://sarkariresult.com.cm/admit-card/", "color": "#004085", "limit": 4},
+        {"cat": "Result", "url": "https://sarkariresult.com.cm/result/", "color": "#b30000", "limit": 4},
+        {"cat": "Answer Key", "url": "https://sarkariresult.com.cm/answer-key/", "color": "#6f42c1", "limit": 3},
+        {"cat": "Syllabus", "url": "https://sarkariresult.com.cm/syllabus/", "color": "#d35400", "limit": 3}
     ]
 
     total_published = 0
 
-    for s in settings:
+    for s in sources:
         cat_name = s["cat"]
-        items = categorized_data.get(cat_name, [])
+        print(f"\nScanning Dedicated Category: {cat_name} ({s['url']})...")
+        items = fetch_category_links(s["url"])
         cat_count = 0
 
         for title, link in items:
