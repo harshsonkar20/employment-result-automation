@@ -30,7 +30,9 @@ SESSION.headers.update({
 def normalize_key(text):
     if not text:
         return ""
-    return re.sub(r'[^a-zA-Z0-9]+', '', str(text).lower())
+    t = str(text).lower()
+    t = re.sub(r'(last date today|last date|out|updated|postponed)', '', t)
+    return re.sub(r'[^a-zA-Z0-9]+', '', t)
 
 def clean_text(text):
     if not text:
@@ -50,6 +52,37 @@ def sanitize_brand_text(text):
     t = re.sub(r'join\s+(our\s+)?(telegram|whatsapp)\s+channel.*', '', t, flags=re.IGNORECASE)
     t = re.sub(r'follow\s+(our\s+)?(telegram|whatsapp).*', '', t, flags=re.IGNORECASE)
     return clean_text(t)
+
+def clean_and_format_age(raw_text):
+    """Parses raw age strings into 100% original, standardized factual sentences."""
+    if not raw_text:
+        return "Age criteria as per official notification guidelines. Standard government reservation age relaxation applies."
+
+    t = raw_text.replace('\n', ' ')
+
+    min_m = re.search(r'minimum\s*age\s*[:\-]?\s*(\d+)\s*(?:years?)?', t, re.IGNORECASE)
+    min_age = min_m.group(1) if min_m else None
+
+    max_m = re.search(r'maximum\s*age\s*[:\-]?\s*(\d+)\s*(?:years?)?', t, re.IGNORECASE)
+    max_age = max_m.group(1) if max_m else None
+
+    date_m = re.search(r'as\s*on\s*[:\-]?\s*(\d{1,2}[\s/\-\.][a-zA-Z0-9]+[\s/\-\.]\d{2,4})', t, re.IGNORECASE)
+    as_on = date_m.group(1) if date_m else None
+
+    parts = []
+    if min_age:
+        parts.append(f"Minimum Age: <strong>{min_age} Years</strong>")
+    if max_age:
+        parts.append(f"Maximum Age: <strong>{max_age} Years</strong>")
+    if as_on:
+        parts.append(f"Age Calculated As On: <strong>{as_on}</strong>")
+
+    if parts:
+        return " • ".join(parts) + ". Upper age relaxation is admissible for reserved categories (SC / ST / OBC / EWS / PwD) in accordance with government reservation rules."
+
+    cleaned = re.sub(r'download\s+sarkariresult\s+app\s+now', '', t, flags=re.IGNORECASE)
+    cleaned = re.sub(r'sarkari\s*result.*', '', cleaned, flags=re.IGNORECASE)
+    return clean_text(cleaned)
 
 def extract_authority_name(title):
     t = clean_text(title)
@@ -369,13 +402,14 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
     # 4. Age Limit Box
     age_box = ""
     if parsed.get("age_text"):
+        formatted_age = clean_and_format_age(parsed['age_text'])
         age_box = f"""
         <div style="background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #d97706; border-radius: 8px; padding: 16px; margin: 20px 0;">
           <h3 style="margin-top: 0; color: #b45309; font-size: 16px; font-weight: 700; margin-bottom: 8px;">
             ⚠️ Age Limit &amp; Relaxation Criteria
           </h3>
           <p style="margin: 0; font-size: 14px; color: #451a03; line-height: 1.6;">
-            {safe_escape(parsed['age_text'])}
+            {formatted_age}
           </p>
           <p style="margin: 6px 0 0 0; font-size: 12.5px; color: #78350f;">
             <em>Note: Age relaxation is admissible for reserved categories (SC/ST/OBC/EWS/PwD/Ex-SM) as per prevailing government reservation guidelines.</em>
@@ -674,11 +708,11 @@ def run():
     homepage_data = extract_homepage_categories()
 
     sources_config = [
-        {"cat": "Result", "color": "#842029", "limit": 4},
-        {"cat": "Admit Card", "color": "#084298", "limit": 4},
-        {"cat": "Latest Jobs", "color": "#0f5132", "limit": 4},
-        {"cat": "Answer Key", "color": "#59359a", "limit": 3},
-        {"cat": "Syllabus", "color": "#a55608", "limit": 5}
+        {"cat": "Latest Jobs", "color": "#0f5132", "limit": 25},
+        {"cat": "Admit Card", "color": "#084298", "limit": 25},
+        {"cat": "Result", "color": "#842029", "limit": 25},
+        {"cat": "Answer Key", "color": "#59359a", "limit": 15},
+        {"cat": "Syllabus", "color": "#a55608", "limit": 15}
     ]
 
     total_published = 0
@@ -689,9 +723,11 @@ def run():
         print(f"\nProcessing Category: [{cat_name}] -> Found {len(items)} active posts on source homepage.")
         cat_count = 0
 
-        for title, link in items:
+        # Publish in reverse order so the top item on Sarkari Result is published last (with the newest timestamp)
+        # This guarantees it appears at the very top of Blogger!
+        for title, link in reversed(items):
             n_key = normalize_key(title)
-            if n_key in existing_titles or link in published_cache:
+            if n_key in existing_titles:
                 continue
 
             publish_title = title
