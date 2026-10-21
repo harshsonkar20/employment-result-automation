@@ -490,3 +490,75 @@ function setupLiveSearch() {
       .catch(function(err) {});
   }
 })();
+
+// ==========================================================================
+// PHOTO & SIGNATURE RESIZER TOOL ENGINE
+// ==========================================================================
+(function() {
+  const fileIn = document.getElementById('toolImgInput');
+  const wIn = document.getElementById('toolWidth');
+  const hIn = document.getElementById('toolHeight');
+  const kbIn = document.getElementById('toolMaxKB');
+  const btn = document.getElementById('toolProcessBtn');
+  const resBox = document.getElementById('toolResult');
+  const prev = document.getElementById('toolPreview');
+  const meta = document.getElementById('toolMeta');
+  const dl = document.getElementById('toolDownload');
+
+  let currentImg = new Image();
+
+  if (fileIn) {
+    fileIn.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          currentImg.onload = function() {
+            wIn.value = currentImg.naturalWidth;
+            hIn.value = currentImg.naturalHeight;
+          };
+          currentImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (btn) {
+    btn.addEventListener('click', function() {
+      if (!currentImg.src || !fileIn.files[0]) {
+        alert('Kripya pehle image file select karein.');
+        return;
+      }
+
+      const targetW = parseInt(wIn.value) || currentImg.naturalWidth;
+      const targetH = parseInt(hIn.value) || currentImg.naturalHeight;
+      const maxKB = parseFloat(kbIn.value);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(currentImg, 0, 0, targetW, targetH);
+
+      let quality = 0.92;
+      let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+      if (maxKB) {
+        while (quality > 0.08) {
+          const currentKB = (dataUrl.length * (3/4)) / 1024;
+          if (currentKB <= maxKB) break;
+          quality -= 0.08;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+      }
+
+      const finalKB = ((dataUrl.length * (3/4)) / 1024).toFixed(1);
+      prev.src = dataUrl;
+      dl.href = dataUrl;
+      meta.innerText = 'Size: ' + targetW + 'x' + targetH + ' px | File Size: ' + finalKB + ' KB';
+      resBox.style.display = 'block';
+    });
+  }
+})();
+
