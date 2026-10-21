@@ -30,7 +30,9 @@ SESSION.headers.update({
 def normalize_key(text):
     if not text:
         return ""
-    return re.sub(r'[^a-zA-Z0-9]+', '', str(text).lower())
+    t = str(text).lower()
+    t = re.sub(r'(last date today|last date|out|updated|postponed)', '', t)
+    return re.sub(r'[^a-zA-Z0-9]+', '', t)
 
 def clean_text(text):
     if not text:
@@ -706,11 +708,11 @@ def run():
     homepage_data = extract_homepage_categories()
 
     sources_config = [
-        {"cat": "Result", "color": "#842029", "limit": 4},
-        {"cat": "Admit Card", "color": "#084298", "limit": 4},
-        {"cat": "Latest Jobs", "color": "#0f5132", "limit": 4},
-        {"cat": "Answer Key", "color": "#59359a", "limit": 3},
-        {"cat": "Syllabus", "color": "#a55608", "limit": 5}
+        {"cat": "Latest Jobs", "color": "#0f5132", "limit": 25},
+        {"cat": "Admit Card", "color": "#084298", "limit": 25},
+        {"cat": "Result", "color": "#842029", "limit": 25},
+        {"cat": "Answer Key", "color": "#59359a", "limit": 15},
+        {"cat": "Syllabus", "color": "#a55608", "limit": 15}
     ]
 
     total_published = 0
@@ -721,9 +723,11 @@ def run():
         print(f"\nProcessing Category: [{cat_name}] -> Found {len(items)} active posts on source homepage.")
         cat_count = 0
 
-        for title, link in items:
+        # Publish in reverse order so the top item on Sarkari Result is published last (with the newest timestamp)
+        # This guarantees it appears at the very top of Blogger!
+        for title, link in reversed(items):
             n_key = normalize_key(title)
-            if n_key in existing_titles or link in published_cache:
+            if n_key in existing_titles:
                 continue
 
             publish_title = title
