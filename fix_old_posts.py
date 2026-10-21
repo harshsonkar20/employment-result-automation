@@ -4,35 +4,44 @@ import html
 import time
 import requests
 from bs4 import BeautifulSoup
-from scraper_bot import get_blogger_service, parse_full_job_page, SESSION, clean_text, normalize_key
+from scraper_bot import (
+    get_blogger_service,
+    parse_full_job_page,
+    build_accurate_html,
+    extract_homepage_categories,
+    SESSION,
+    clean_text,
+    safe_escape,
+    sanitize_brand_text,
+    normalize_key,
+    is_old_post
+)
 
 BLOG_ID = os.environ.get("BLOG_ID", "").strip()
 
-def upgrade_all_old_post_links():
+def upgrade_and_clean_posts():
+    if not BLOG_ID:
+        print("ERROR: BLOG_ID environment variable is not set.")
+        return
+
     service = get_blogger_service()
 
-    # 1. Fetch homepage of source to map Post Title -> Source URL
-    print("Building source URL map from sarkariresult.com.cm...")
-    title_to_url = {}
-    try:
-        r = SESSION.get("https://sarkariresult.com.cm/", timeout=15)
-        if r.status_code == 200:
-            soup = BeautifulSoup(r.text, "html.parser")
-            for a in soup.find_all("a", href=True):
-                t = clean_text(a.get_text())
-                h = a["href"].strip()
-                if h.startswith("/"): h = f"https://sarkariresult.com.cm{h}"
-                elif not h.startswith("http"): h = f"https://sarkariresult.com.cm/{h}"
-                if len(t) > 15:
-                    title_to_url[normalize_key(t)] = h
-    except Exception as e:
-        print(f"Source map warning: {e}")
+    # 1. Fetch current active homepage data
+    print("Fetching active posts catalog from sarkariresult.com.cm...")
+    homepage_data = extract_homepage_categories()
 
-    print(f"Mapped {len(title_to_url)} active job URLs.")
+    # Build Title -> (URL, Category) map
+    title_to_meta = {}
+    for cat, items in homepage_data.items():
+        for t, h in items:
+            title_to_meta[normalize_key(t)] = (h, cat)
 
-    # 2. Fetch Blogger Posts
+    print(f"Mapped {len(title_to_meta)} active posts directly from source homepage.")
+
+    # 2. Fetch all Blogger Posts
     posts = []
     page_token = None
+    print("Fetching existing posts from Blogger...")
     while True:
         res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=100, pageToken=page_token).execute()
         posts.extend(res.get('items', []))
@@ -40,69 +49,104 @@ def upgrade_all_old_post_links():
         if not page_token:
             break
 
-    print(f"Scanning {len(posts)} Blogger posts for single-link tables...")
+    print(f"Scanning {len(posts)} live Blogger posts...")
+    reverted_old_count = 0
     updated_count = 0
+    relabelled_syllabus_count = 0
 
     for p in posts:
         post_id = p['id']
         title = p.get('title', '')
         content = p.get('content', '')
+        published = p.get('published', '')
+        labels = p.get('labels', ['Latest Jobs'])
+        category_name = labels[0] if labels else "Latest Jobs"
 
-        # Check if post only has the single fallback row
-        if any(marker in content for marker in ["Official Notification &amp; Portal", "Official Notification & Portal", "Official Notification &amp; Web Portal", "Official Notification & Web Portal", "Official Notification &amp; Direct Portal"]):
-            n_key = normalize_key(title)
-            source_url = title_to_url.get(n_key)
+        # A. Check if this is an outdated / historical post (older than August 2026 or past cycle)
+        if is_old_post(title, published):
+            print(f"--> [REVERTING OLD POST TO DRAFT] {title} (Published: {published[:10]})")
+            try:
+                service.posts().revert(blogId=BLOG_ID, postId=post_id).execute()
+                reverted_old_count += 1
+                time.sleep(1)
+                continue
+            except Exception as e:
+                print(f"    ✖ Revert error: {e}")
 
-            links = []
-            if source_url:
-                print(f"--> Re-parsing full multi-links for: {title}")
-                parsed = parse_full_job_page(source_url)
-                links = parsed.get("links", [])
+        # B. Check if post is a Syllabus item with wrong label
+        if "syllabus" in title.lower() and "Syllabus" not in labels:
+            print(f"--> [FIXING SYLLABUS LABEL] {title}")
+            labels = ["Syllabus"]
+            category_name = "Syllabus"
+            relabelled_syllabus_count += 1
 
-            # Agar source homepage par nahi mila, toh intelligent multi-row links banayein
-            if len(links) < 2:
-                from urllib.parse import quote_plus
-                q_apply = quote_plus(f"{title} apply online")
-                q_pdf = quote_plus(f"{title} official notification pdf")
-                links = [
-                    {"label": "Apply Online / Registration", "url": source_url or f"https://www.google.com/search?q={q_apply}"},
-                    {"label": "Download Official Notification PDF", "url": source_url or f"https://www.google.com/search?q={q_pdf}"}
-                ]
-                # Check if official site URL is already mentioned inside post FAQ text
-                faq_match = re.search(r'(https?://[a-zA-Z0-9\.\-]+(?:\.gov\.in|\.nic\.in|\.org\.in|\.com|\.in)/?)', content)
-                if faq_match and "blogspot" not in faq_match.group(1) and "w3.org" not in faq_match.group(1):
-                    links.append({"label": "Official Website Portal", "url": faq_match.group(1)})
+        # C. Re-write all posts into 100% original, copyright-free, AdSense-approved format
+        n_key = normalize_key(title)
+        meta = title_to_meta.get(n_key)
 
-            # Build multi-row HTML
-            new_rows = ""
-            for lk in links:
-                btn_color = "#0056b3" if "official" in lk['label'].lower() else ("#d35400" if "notification" in lk['label'].lower() else "#28a745")
-                new_rows += f"<tr><td style='border:1px solid #999; padding:10px; font-weight:bold;'>{lk['label']}</td><td style='border:1px solid #999; padding:10px; text-align:center;'><a href='{lk['url']}' target='_blank' rel='noopener noreferrer' style='background:{btn_color}; color:#fff; padding:7px 16px; font-weight:bold; border-radius:3px; text-decoration:none; display:inline-block;'>Click Here</a></td></tr>"
+        if meta:
+            source_url, cat_from_source = meta
+            effective_cat = cat_from_source if cat_from_source else category_name
+            print(f"--> Upgrading post to 100% original AdSense format: {title}")
+            parsed = parse_full_job_page(source_url, title)
+            new_html = build_accurate_html(title, effective_cat, parsed)
 
-            # Replace the last table (Important Links table)
-            new_content = re.sub(
-                r'(<div[^>]*>\s*Important Links\s*</div>\s*<table[^>]*>).*?(</table>)',
-                rf'\1{new_rows}\2',
-                content,
-                flags=re.DOTALL | re.IGNORECASE
-            )
+            body = {
+                "title": title,
+                "content": new_html,
+                "labels": [effective_cat],
+                "searchDescription": p.get("searchDescription", f"{title} official notification, eligibility & direct apply links.")[:150]
+            }
+            try:
+                service.posts().patch(blogId=BLOG_ID, postId=post_id, body=body).execute()
+                print(f"    ✔ [UPDATED & SYSTEMATIZED] {title}")
+                updated_count += 1
+                time.sleep(1.5)
+            except Exception as e:
+                print(f"    ✖ [Patch Error] {e}")
 
-            if new_content != content:
-                body = {
-                    "title": title,
-                    "content": new_content,
-                    "labels": p.get("labels", []),
-                    "searchDescription": p.get("searchDescription", "")
-                }
-                try:
-                    service.posts().patch(blogId=BLOG_ID, postId=post_id, body=body).execute()
-                    print(f"    [UPDATED WITH {len(links)} LINKS] {title}")
-                    updated_count += 1
-                    time.sleep(1.5)
-                except Exception as e:
-                    print(f"    [Error] {e}")
+    # D. Ensure Syllabus section has active posts
+    syllabus_items = homepage_data.get("Syllabus", [])
+    print(f"\nChecking Syllabus posts (Found {len(syllabus_items)} on source homepage)...")
+    existing_live_titles = {normalize_key(p.get('title', '')) for p in posts if not is_old_post(p.get('title', ''), p.get('published', ''))}
 
-    print(f"\nCOMPLETED! Upgraded {updated_count} posts to full multi-link tables.")
+    published_syllabus = 0
+    for s_title, s_url in syllabus_items:
+        n_key = normalize_key(s_title)
+        s_publish_title = s_title
+        if "syllabus" not in s_publish_title.lower() and "exam pattern" not in s_publish_title.lower():
+            s_publish_title = f"{s_title} Syllabus & Exam Pattern"
+
+        if normalize_key(s_publish_title) in existing_live_titles or n_key in existing_live_titles:
+            continue
+
+        print(f"Publishing fresh Syllabus post -> {s_publish_title}")
+        parsed_data = parse_full_job_page(s_url, s_publish_title)
+        post_html = build_accurate_html(s_publish_title, "Syllabus", parsed_data, border_color="#a55608")
+
+        body = {
+            "title": s_publish_title,
+            "content": post_html,
+            "labels": ["Syllabus"],
+            "searchDescription": f"{s_publish_title} official syllabus, exam pattern, subject-wise topics & notification."[:150]
+        }
+        try:
+            service.posts().insert(blogId=BLOG_ID, body=body, isDraft=False).execute()
+            print(f"    ✔ Successfully published Syllabus post: {s_publish_title}")
+            existing_live_titles.add(normalize_key(s_publish_title))
+            published_syllabus += 1
+            time.sleep(2)
+            if published_syllabus >= 6:
+                break
+        except Exception as e:
+            print(f"    ✖ Insert error: {e}")
+
+    print(f"\n==========================================")
+    print(f"MAINTENANCE COMPLETED:")
+    print(f" - Outdated/Historical posts reverted to draft: {reverted_old_count}")
+    print(f" - Posts rewritten into 100% unique AdSense content: {updated_count}")
+    print(f" - Syllabus posts labelled: {relabelled_syllabus_count}")
+    print(f" - Fresh Syllabus posts added: {published_syllabus}")
 
 if __name__ == "__main__":
-    upgrade_all_old_post_links()
+    upgrade_and_clean_posts()
