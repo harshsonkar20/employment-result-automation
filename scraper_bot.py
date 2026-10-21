@@ -45,12 +45,33 @@ def sanitize_brand_text(text):
     if not text:
         return ""
     t = clean_text(text)
-    # Remove competitor app advertisements & promotional banners
     t = re.sub(r'download\s+sarkariresult\s+app\s+now', '', t, flags=re.IGNORECASE)
     t = re.sub(r'sarkari\s*result(\.com|\.cm)?', SITE_BRAND_NAME, t, flags=re.IGNORECASE)
     t = re.sub(r'join\s+(our\s+)?(telegram|whatsapp)\s+channel.*', '', t, flags=re.IGNORECASE)
     t = re.sub(r'follow\s+(our\s+)?(telegram|whatsapp).*', '', t, flags=re.IGNORECASE)
     return clean_text(t)
+
+def is_old_post(title, published_date=""):
+    """
+    Filters out historical/outdated posts.
+    Site started in August 2026. Only posts from August 2026 onward are allowed.
+    """
+    if published_date and published_date < "2026-08-01":
+        return True
+
+    tl = clean_text(title).lower()
+    has_old_year = bool(re.search(r'\b(2021|2022|2023|2024|2025)\b', tl))
+    has_new_year = bool(re.search(r'\b(2026|2027)\b', tl))
+
+    # If it specifies an old year and doesn't specify 2026/2027, skip it
+    if has_old_year and not has_new_year:
+        return True
+
+    # Drop explicit old backlog/waiting list notices from past cycles
+    if any(k in tl for k in ['2022', '2023', '2024']):
+        return True
+
+    return False
 
 def fix_relative_url(base_url, link_url):
     if not link_url:
@@ -163,7 +184,7 @@ def parse_full_job_page(url, post_title):
     # 2. Extract Lead Overview / Short Details
     for p in soup.find_all('p'):
         pt = clean_text(p.get_text())
-        if len(pt) > 50 and any(w in pt.lower() for w in ["released", "notification", "conducted", "recruitment", "invited", "exam date", "admit card", "result"]):
+        if len(pt) > 50 and any(w in pt.lower() for w in ["released", "notification", "conducted", "recruitment", "invited", "exam date", "admit card", "result", "syllabus"]):
             if not any(bad in pt.lower() for bad in ["telegram", "whatsapp", "download app"]):
                 data["overview"] = sanitize_brand_text(pt)
                 break
@@ -231,7 +252,7 @@ def parse_full_job_page(url, post_title):
             continue
 
         # D. Links Table
-        if any(k in tbl_text for k in ["apply online", "download result", "admit card", "official website", "official notification", "answer key"]):
+        if any(k in tbl_text for k in ["apply online", "download result", "admit card", "official website", "official notification", "answer key", "syllabus"]):
             found_links = []
             seen_urls = set()
             for tr in rows:
@@ -299,7 +320,7 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
     # 1. Dynamic Overview Synopsis
     overview_text = parsed.get("overview", "")
     if not overview_text or len(overview_text) < 40:
-        overview_text = f"Candidates preparing for central and state government recruitment exams can check the official details for <strong>{clean_title}</strong>. The recruitment authority has officially published the schedule, eligibility rules, and examination details. Read below for full information and verified direct action links."
+        overview_text = f"Candidates preparing for central and state government recruitment exams can check official details for <strong>{clean_title}</strong>. The recruitment authority has officially published the schedule, syllabus, eligibility criteria, and examination details. Read below for full information and verified direct action links."
     else:
         overview_text = safe_escape(overview_text)
 
@@ -421,7 +442,7 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
             btn_bg = "#dc2626"  # Red
         elif "answer" in lbl_low or "objection" in lbl_low or "key" in lbl_low:
             btn_bg = "#7c3aed"  # Purple
-        elif "notification" in lbl_low or "pdf" in lbl_low:
+        elif "notification" in lbl_low or "pdf" in lbl_low or "syllabus" in lbl_low:
             btn_bg = "#ea580c"  # Orange
         else:
             btn_bg = "#2563eb"  # Royal Blue
@@ -499,46 +520,72 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
     </div>
     """
 
-# ==================== DEDICATED CATEGORY EXTRACTOR ====================
+# ==================== HOMEPAGE STRUCTURE-BASED EXTRACTOR ====================
 
-def fetch_category_links(cat_url):
-    results = []
-    seen = set()
+def extract_homepage_categories():
+    """
+    Scrapes the exact 5 category boxes directly from the homepage of sarkariresult.com.cm:
+    1. Results
+    2. Admit Cards
+    3. Latest Jobs
+    4. Answer Key
+    5. Syllabus
+    Filters out historical/outdated posts before August 2026.
+    """
+    categories = {
+        "Result": [],
+        "Admit Card": [],
+        "Latest Jobs": [],
+        "Answer Key": [],
+        "Syllabus": []
+    }
+
     try:
-        r = SESSION.get(cat_url, timeout=15)
+        r = SESSION.get('https://sarkariresult.com.cm/', timeout=15)
         if r.status_code != 200:
-            return results
+            return categories
         soup = BeautifulSoup(r.text, 'html.parser')
-    except Exception:
-        return results
+    except Exception as e:
+        print(f"Error fetching homepage: {e}")
+        return categories
 
-    # Main content container to avoid sidebars and footers
-    main_area = soup.find('div', {'id': 'content'}) or soup.find('main') or soup.find('article') or soup
+    cols = soup.find_all('div', class_=lambda c: c and 'gb-grid-column' in c)
+    for col in cols:
+        col_text = col.get_text(separator=' ', strip=True).lower()
 
-    for a in main_area.find_all('a', href=True):
-        t = clean_text(a.get_text())
-        h = a['href'].strip()
+        target_cat = None
+        if col_text.startswith('result') or 'results' in col_text[:20]:
+            target_cat = "Result"
+        elif col_text.startswith('admit') or 'admit cards' in col_text[:20]:
+            target_cat = "Admit Card"
+        elif col_text.startswith('latest job') or 'latest jobs' in col_text[:20]:
+            target_cat = "Latest Jobs"
+        elif col_text.startswith('answer key') or 'answer key' in col_text[:20]:
+            target_cat = "Answer Key"
+        elif col_text.startswith('syllabus') or 'syllabus' in col_text[:20]:
+            target_cat = "Syllabus"
 
-        if not h.startswith("http"):
-            h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
+        if target_cat and not categories[target_cat]:
+            seen = set()
+            for a in col.find_all('a', href=True):
+                t = clean_text(a.get_text())
+                h = a['href'].strip()
+                if not h.startswith("http"):
+                    h = f"https://sarkariresult.com.cm/{h.lstrip('/')}"
+                if len(t) < 10 or h in seen:
+                    continue
+                if any(bad in h for bad in ['category', 'tag', 'telegram', 'whatsapp', 'facebook', 'twitter']):
+                    continue
+                seen.add(h)
 
-        tl = t.lower()
+                # Filter out historical posts older than August 2026
+                if is_old_post(t):
+                    print(f"  [Skipping Old Post] ({target_cat}) {t}")
+                    continue
 
-        # Clean Junk Filters
-        if len(t) < 14:
-            continue
-        if re.search(r'[\u0900-\u097F]', t):
-            continue  # Drop non-standard Hindi clickbait titles
-        if any(bad in tl for bad in ["view more", "click here", "sarkari result", "skip to content", "privacy policy", "disclaimer", "contact us", "about us", "page"]):
-            continue
-        if any(bad in h.lower() for bad in ["/category/", "/tag/", "/p/", "/tools", "/page/"]):
-            continue
+                categories[target_cat].append((t, h))
 
-        if h not in seen:
-            seen.add(h)
-            results.append((t, h))
-
-    return results
+    return categories
 
 # ==================== MAIN EXECUTION ====================
 
@@ -552,20 +599,23 @@ def run():
 
     published_cache = load_published_cache()
 
-    sources = [
-        {"cat": "Latest Jobs", "url": "https://sarkariresult.com.cm/latest-jobs/", "color": "#0f5132", "limit": 4},
-        {"cat": "Admit Card", "url": "https://sarkariresult.com.cm/admit-card/", "color": "#084298", "limit": 3},
-        {"cat": "Result", "url": "https://sarkariresult.com.cm/result/", "color": "#842029", "limit": 3},
-        {"cat": "Answer Key", "url": "https://sarkariresult.com.cm/answer-key/", "color": "#59359a", "limit": 2},
-        {"cat": "Syllabus", "url": "https://sarkariresult.com.cm/syllabus/", "color": "#a55608", "limit": 2}
+    print("\nScanning sarkariresult.com.cm Homepage for structured live boxes...")
+    homepage_data = extract_homepage_categories()
+
+    sources_config = [
+        {"cat": "Result", "color": "#842029", "limit": 4},
+        {"cat": "Admit Card", "color": "#084298", "limit": 4},
+        {"cat": "Latest Jobs", "color": "#0f5132", "limit": 4},
+        {"cat": "Answer Key", "color": "#59359a", "limit": 3},
+        {"cat": "Syllabus", "color": "#a55608", "limit": 5}
     ]
 
     total_published = 0
 
-    for s in sources:
-        cat_name = s["cat"]
-        print(f"\nScanning: {cat_name} -> {s['url']}")
-        items = fetch_category_links(s["url"])
+    for cfg in sources_config:
+        cat_name = cfg["cat"]
+        items = homepage_data.get(cat_name, [])
+        print(f"\nProcessing Category: [{cat_name}] -> Found {len(items)} active posts on source homepage.")
         cat_count = 0
 
         for title, link in items:
@@ -573,14 +623,19 @@ def run():
             if n_key in existing_titles or link in published_cache:
                 continue
 
-            print(f"Publishing -> [{cat_name}] {title}")
-            parsed_data = parse_full_job_page(link, title)
-            post_html = build_accurate_html(title, cat_name, parsed_data, border_color=s["color"])
+            # Format Syllabus title specifically for high SEO visibility if needed
+            publish_title = title
+            if cat_name == "Syllabus" and "syllabus" not in publish_title.lower() and "exam pattern" not in publish_title.lower():
+                publish_title = f"{title} Syllabus & Exam Pattern"
 
-            search_desc = f"{title} official notification, eligibility, exam date, syllabus & direct apply online links."[:150]
+            print(f"Publishing -> [{cat_name}] {publish_title}")
+            parsed_data = parse_full_job_page(link, publish_title)
+            post_html = build_accurate_html(publish_title, cat_name, parsed_data, border_color=cfg["color"])
+
+            search_desc = f"{publish_title} official notification, eligibility, syllabus, exam date & direct action links."[:150]
 
             body = {
-                "title": title,
+                "title": publish_title,
                 "content": post_html,
                 "labels": [cat_name],
                 "searchDescription": search_desc
@@ -588,14 +643,14 @@ def run():
 
             try:
                 service.posts().insert(blogId=BLOG_ID, body=body, isDraft=False).execute()
-                print("  ✔ Successfully Published!")
+                print(f"  ✔ Successfully Published to [{cat_name}]!")
                 published_cache.add(link)
                 existing_titles.add(n_key)
                 total_published += 1
                 cat_count += 1
                 time.sleep(2)
 
-                if cat_count >= s["limit"]:
+                if cat_count >= cfg["limit"]:
                     break
             except Exception as e:
                 print(f"  ✖ Insert error: {e}")
