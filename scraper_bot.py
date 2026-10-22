@@ -341,7 +341,7 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
       <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
         <thead>
           <tr style="background: {border_color}; color: #ffffff;">
-            <th colspan="2" style="padding: 12px 16px; text-align: left; font-size: 16px; font-weight: 700;">
+            <th colspan="2" style="background: {border_color}; color: #ffffff; padding: 12px 16px; text-align: left; font-size: 16px; font-weight: 700;">
               📌 {safe_escape(clean_title)} - Quick Overview
             </th>
           </tr>
