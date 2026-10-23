@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
+  <title>Rojgaar Result — Government Job Portal &amp; Sarkari Naukri (rojgaarresult.com)</title>
+  
+  <!-- Favicons & Touch Icons (Rojgaar Result) -->
+  <link rel="icon" type="image/png" href="assets/favicon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-192x192.png" />
+  <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico" />
+  
+  <!-- Modern Google Font: Plus Jakarta Sans for crisp, premium typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       EMPLOYMENT RESULT — 5-CARD PORTAL LAYOUT (v3.5 ENHANCED)
+       Preserves Exact 5-Box Architecture with World-Class Aesthetics
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      
+      /* Light Theme Colors */
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-hover: #f1f5f9;
+      --surface-2: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --border: #e2e8f0;
+      
+      /* Brand Accents */
+      --brand: #2563eb;
+      --brand-hover: #1d4ed8;
+      --brand-subtle: #eff6ff;
+      --brand-gradient: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+      
+      /* 5 Category Accent Borders & Glows */
+      --color-res: #dc2626;
+      --color-res-bg: #fef2f2;
+      --color-adm: #2563eb;
+      --color-adm-bg: #eff6ff;
+      --color-job: #16a34a;
+      --color-job-bg: #f0fdf4;
+      --color-key: #9333ea;
+      --color-key-bg: #faf5ff;
+      --color-syl: #ea580c;
+      --color-syl-bg: #fff7ed;
+      
+      --card-radius: 16px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+      --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+      --shadow-hover: 0 16px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+    }
+
+    body.dark-mode {
+      --bg: #090d16;
+      --surface: #0f172a;
+      --surface-hover: #1e293b;
+      --surface-2: #141e33;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-light: #64748b;
+      --border: #1e293b;
+      
+      --brand: #3b82f6;
+      --brand-hover: #60a5fa;
+      --brand-subtle: rgba(59, 130, 246, 0.15);
+      
+      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+      --shadow-hover: 0 16px 32px -4px rgba(0, 0, 0, 0.7);
+    }
+
+    body {
+      font-family: var(--font-main);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 85px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Keyframe Animations */
+    @keyframes srPulse {
+      0%, 100% { opacity: 0.95; }
+      50% { opacity: 0.35; }
+    }
+    @keyframes liveGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Top Strip */
+    .top-strip {
+      background: #0f172a;
+      color: #93c5fd;
+      padding: 8px 16px;
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .top-strip-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #22c55e;
+      animation: liveGlow 1.8s infinite;
+      display: inline-block;
+    }
+    .top-strip-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .top-strip-right a {
+      color: #cbd5e1;
+      font-size: 11.5px;
+      transition: color 0.2s;
+    }
+    .top-strip-right a:hover {
+      color: #ffffff;
+    }
+
+    /* Glassmorphic SaaS Header */
+    .saas-header {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+      transition: background 0.3s;
+    }
+    body.dark-mode .saas-header {
+      background: rgba(15, 23, 42, 0.92);
+    }
+    .header-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      transition: transform 0.2s ease;
+      user-select: none;
+    }
+    .brand-logo:hover {
+      transform: translateY(-1px);
+    }
+    .brand-badge {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0c2055;
+      transition: box-shadow 0.2s ease;
+    }
+    .brand-badge-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    body.dark-mode .brand-badge {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .brand-text-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      line-height: 1.15;
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      font-family: var(--font-main);
+      display: flex;
+      align-items: center;
+    }
+    .brand-word-navy {
+      color: #0c2055;
+      transition: color 0.2s ease;
+    }
+    .brand-word-orange {
+      color: #ea580c;
+    }
+    body.dark-mode .brand-word-navy {
+      color: #ffffff;
+    }
+    .brand-tagline {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #15803d;
+      margin-top: 2px;
+      font-family: var(--font-main);
+      transition: color 0.2s ease;
+    }
+    body.dark-mode .brand-tagline {
+      color: #4ade80;
+    }
+    @media (max-width: 480px) {
+      .brand-title {
+        font-size: 19px;
+      }
+      .brand-tagline {
+        font-size: 8px;
+        letter-spacing: 0.7px;
+      }
+      .brand-badge {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+      }
+    }
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      padding: 7px 13px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      background: var(--surface-hover);
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--brand);
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+    .nav-btn-highlight {
+      background: var(--brand-gradient) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .theme-toggle-btn {
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border);
+    }
+
+    /* Hero Search Area (Modern Navy Gradient) */
+    .hero-search-area {
+      background: linear-gradient(135deg, #090e1c 0%, #152243 50%, #0c142b 100%);
+      padding: 40px 20px 34px 20px;
+      text-align: center;
+      color: #ffffff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+    .search-box-wrapper {
+      max-width: 680px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 16px 52px 16px 22px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: #ffffff;
+      color: #0f172a;
+      outline: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      transition: all 0.25s ease;
+    }
+    .search-input:focus {
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 10px 30px rgba(0, 0, 0, 0.25);
+      border-color: #60a5fa;
+    }
+    .search-icon {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 19px;
+      color: #64748b;
+      pointer-events: none;
+    }
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-hover);
+      max-height: 380px;
+      overflow-y: auto;
+      z-index: 9999;
+      display: none;
+      list-style: none;
+      text-align: left;
+      padding: 6px;
+    }
+    .search-dropdown li {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .search-dropdown li:hover {
+      background: var(--surface-hover);
+    }
+
+    /* Filter Chips Bar */
+    .filter-chips-container {
+      max-width: 860px;
+      margin: 20px auto 0 auto;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      justify-content: center;
+      padding-bottom: 2px;
+    }
+    .filter-chips-container::-webkit-scrollbar { display: none; }
+    @media (max-width: 860px) {
+      .filter-chips-container { justify-content: flex-start; }
+    }
+    .chip-btn {
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .chip-btn:hover, .chip-btn.active {
+      background: #ffffff;
+      color: #0f172a !important;
+      border-color: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Main Container & Modern 5-Box Grid */
+    .main-container {
+      max-width: 1240px;
+      margin: 28px auto 40px auto;
+      padding: 0 16px;
+      min-height: 550px;
+    }
+
+    /* Row 1: 3 Modern Equal-Height Cards */
+    .cards-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      margin-bottom: 28px;
+      align-items: stretch; /* Fixes height mismatch! */
+    }
+    /* Row 2: 2 Modern Equal-Height Cards */
+    .cards-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+      margin-bottom: 34px;
+      align-items: stretch;
+    }
+
+    /* Mobile Reordering for Natural Student Priority */
+    @media (max-width: 880px) {
+      .cards-grid-3 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px;
+      }
+      .cards-grid-2 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px;
+      }
+      .card-order-job { order: 1 !important; }
+      .card-order-adm { order: 2 !important; }
+      .card-order-res { order: 3 !important; }
+    }
+
+    /* Feed Card Style */
+    .feed-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      height: 100%;
+    }
+    .feed-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: #cbd5e1;
+    }
+    body.dark-mode .feed-card:hover {
+      border-color: #334155;
+    }
+
+    /* Card Header */
+    .card-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15.5px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+    }
+    .card-head-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .head-res { border-top: 4px solid var(--color-res); color: var(--color-res); }
+    .head-adm { border-top: 4px solid var(--color-adm); color: var(--color-adm); }
+    .head-job { border-top: 4px solid var(--color-job); color: var(--color-job); }
+    .head-key { border-top: 4px solid var(--color-key); color: var(--color-key); }
+    .head-syl { border-top: 4px solid var(--color-syl); color: var(--color-syl); }
+
+    .head-count-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: var(--surface-hover);
+      color: var(--text-muted);
+    }
+
+    /* Card Body List with Balanced Height & Smooth Scroll */
+    .card-body-list {
+      list-style: none;
+      padding: 8px 12px;
+      min-height: 380px;
+      max-height: 480px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      flex-grow: 1;
+    }
+    .card-body-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .card-body-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .card-body-list li {
+      padding: 9px 8px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 13.5px;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    body.dark-mode .card-body-list li {
+      border-bottom-color: #1e293b;
+    }
+    .card-body-list li:hover {
+      background: var(--surface-hover);
+      border-radius: 8px;
+      transform: translateX(3px);
+    }
+    .card-body-list li a {
+      flex: 1;
+      font-weight: 600;
+      color: var(--text);
+      transition: color 0.15s;
+    }
+    .card-body-list li:hover a {
+      color: var(--brand);
+    }
+
+    /* Department Badges */
+    .org-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .badge-ssc { background: #dbeafe; color: #1e40af; }
+    .badge-rrb { background: #dcfce7; color: #166534; }
+    .badge-police { background: #fef3c7; color: #92400e; }
+    .badge-bank { background: #f3e8ff; color: #6b21a8; }
+    .badge-upsc { background: #fee2e2; color: #991b1b; }
+    .badge-default { background: #f1f5f9; color: #475569; }
+
+    body.dark-mode .badge-ssc { background: rgba(30, 64, 175, 0.3); color: #93c5fd; }
+    body.dark-mode .badge-rrb { background: rgba(22, 101, 52, 0.3); color: #86efac; }
+    body.dark-mode .badge-police { background: rgba(146, 64, 14, 0.3); color: #fde68a; }
+    body.dark-mode .badge-bank { background: rgba(107, 33, 168, 0.3); color: #d8b4fe; }
+    body.dark-mode .badge-upsc { background: rgba(153, 27, 27, 0.3); color: #fca5a5; }
+    body.dark-mode .badge-default { background: #1e293b; color: #94a3b8; }
+
+    .urgency-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .urgency-ending {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    body.dark-mode .urgency-ending {
+      background: rgba(185, 28, 28, 0.3);
+      color: #fca5a5;
+      border-color: rgba(248, 113, 113, 0.4);
+    }
+
+    .btn-item-share {
+      opacity: 0;
+      background: transparent;
+      border: none;
+      font-size: 13px;
+      color: #25d366;
+      cursor: pointer;
+      padding: 0 4px;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .card-body-list li:hover .btn-item-share {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+
+    /* Card Footer */
+    .card-footer-box {
+      padding: 11px 18px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-2);
+      text-align: right;
+    }
+    .btn-more-link {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--brand);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: gap 0.15s;
+    }
+    .btn-more-link:hover {
+      gap: 7px;
+      text-decoration: underline;
+    }
+
+    /* Centered Age Calculator Frame */
+    .calc-container {
+      max-width: 860px;
+      margin: 38px auto;
+      padding: 30px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow-card);
+      text-align: center;
+    }
+    .calc-title {
+      font-size: 21px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .calc-subtitle {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .calc-fields {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .field-box {
+      flex: 1;
+      min-width: 220px;
+      text-align: left;
+    }
+    .field-box label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .field-box input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      background: var(--surface-hover);
+      color: var(--text);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field-box input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .btn-calculate {
+      background: var(--brand);
+      color: #ffffff;
+      padding: 12px 24px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .btn-calculate:hover {
+      background: var(--brand-hover);
+      transform: translateY(-1px);
+    }
+    .calc-result-box {
+      display: none;
+      margin-top: 22px;
+      padding: 16px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+    body.dark-mode .calc-result-box {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .calc-result-metric {
+      font-size: 19px;
+      font-weight: 900;
+      color: #047857;
+    }
+    body.dark-mode .calc-result-metric {
+      color: #34d399;
+    }
+
+    /* Single Post & Static Content */
+    .content-card-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-radius);
+      padding: 34px;
+      margin: 24px auto;
+      max-width: 960px;
+      box-shadow: var(--shadow-sm);
+    }
+    .content-title {
+      font-size: 26px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+      color: var(--brand);
+      line-height: 1.35;
+    }
+    .content-body-area {
+      font-size: 15.5px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+    .content-body-area table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .content-body-area th, .content-body-area td {
+      border: 1px solid var(--border);
+      padding: 11px 14px;
+    }
+    /* Table Headers & Quick Overview Card High-Contrast Fix */
+    .content-body-area table thead tr,
+    .content-body-area table tr[style*="color: #ffffff"],
+    .content-body-area table tr[style*="color:#ffffff"] {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+      color: #ffffff !important;
+    }
+    .content-body-area table th {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      font-size: 15.5px !important;
+      padding: 12px 16px !important;
+      border: 1px solid #1d4ed8 !important;
+      letter-spacing: 0.2px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+    }
+    body.dark-mode .content-body-area table th {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+      border-color: #3b82f6 !important;
+      color: #ffffff !important;
+    }
+    .content-body-area table td {
+      color: var(--text);
+      background: var(--surface);
+    }
+    .content-body-area table td[style*="background: #f8fafc"],
+    .content-body-area table td[style*="background:#f8fafc"] {
+      background: var(--surface-hover) !important;
+      color: var(--text) !important;
+    }
+    body.dark-mode .content-body-area div[style*="background: #ffffff"],
+    body.dark-mode .content-body-area div[style*="background:#ffffff"] {
+      background: transparent !important;
+      color: var(--text) !important;
+    }
+    /* Prevent duplicate title if post body already includes an h1 heading */
+    .content-body-area > div > h1:first-child,
+    .content-body-area > h1:first-child {
+      display: none;
+    }
+
+    /* Featured Recruitment Banner */
+    .post-featured-banner {
+      margin: 14px auto 24px auto;
+      text-align: center;
+      max-width: 100%;
+    }
+    .post-featured-banner img {
+      width: 100%;
+      max-width: 900px;
+      height: auto;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+      border: 1px solid var(--border);
+      display: block;
+      margin: 0 auto;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .post-featured-banner img:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+    }
+    body.dark-mode .post-featured-banner img {
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Mobile App Bottom Floating Dock */
+    .mobile-dock {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.08);
+      z-index: 999;
+      padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+      justify-content: space-around;
+      align-items: center;
+    }
+    body.dark-mode .mobile-dock {
+      background: rgba(15, 23, 42, 0.94);
+    }
+    @media (max-width: 768px) {
+      .mobile-dock { display: flex; }
+      .header-nav { display: none; }
+    }
+    .dock-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .dock-tab:hover, .dock-tab.active { color: var(--brand); }
+    .dock-icon { font-size: 19px; }
+
+    /* ==========================================
+       SOCIAL MEDIA SHARING ENGINE
+       ========================================== */
+    .post-share-bar {
+      margin: 18px 0 24px 0;
+      padding: 12px 18px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .share-bar-label {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .share-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      color: #ffffff;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .share-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+      filter: brightness(1.08);
+      color: #ffffff !important;
+    }
+    .share-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Platform Color Tokens */
+    .btn-wa {
+      background: #25d366;
+      box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3);
+    }
+    .btn-tg {
+      background: #229ed9;
+      box-shadow: 0 3px 10px rgba(34, 158, 217, 0.3);
+    }
+    .btn-fb {
+      background: #1877f2;
+      box-shadow: 0 3px 10px rgba(24, 119, 242, 0.3);
+    }
+    .btn-ig {
+      background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      box-shadow: 0 3px 10px rgba(220, 39, 67, 0.35);
+    }
+    .btn-copy {
+      background: var(--surface);
+      color: var(--text) !important;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-copy:hover {
+      background: var(--surface-hover);
+      color: var(--brand) !important;
+      border-color: var(--brand);
+    }
+    body.dark-mode .btn-copy {
+      background: #1e293b;
+      color: #f8fafc !important;
+      border-color: #334155;
+    }
+    body.dark-mode .btn-copy:hover {
+      background: #334155;
+      color: #60a5fa !important;
+      border-color: #60a5fa;
+    }
+    .share-btn svg {
+      width: 17px;
+      height: 17px;
+      fill: currentColor;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    /* Bottom Share CTA Box */
+    .post-share-cta-box {
+      margin: 38px 0 20px 0;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(79, 70, 229, 0.08) 100%);
+      border: 1.5px solid rgba(37, 99, 235, 0.22);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    body.dark-mode .post-share-cta-box {
+      background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    .share-cta-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .share-cta-icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+    .share-cta-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0 0 3px 0;
+    }
+    .share-cta-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+    .share-btn-lg {
+      padding: 9px 16px;
+      font-size: 13px;
+    }
+    @media (max-width: 600px) {
+      .post-share-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .share-btn-group {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .share-btn {
+        justify-content: center;
+      }
+      .share-btn.btn-copy {
+        grid-column: span 2;
+      }
+    }
+
+    /* Premium Centered Footer Styling */
+    .saas-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 48px 20px 42px 20px;
+      margin-top: 60px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.02);
+    }
+    body.dark-mode .saas-footer {
+      background: #0b1120;
+      border-top: 1px solid #1e293b;
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .footer-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      margin-bottom: 16px;
+    }
+    .footer-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+      flex-shrink: 0;
+    }
+    .footer-badge-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      object-fit: cover;
+      display: block;
+    }
+    .footer-text-col {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      line-height: 1.15;
+    }
+    .footer-title {
+      font-size: 23px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      font-family: var(--font-main);
+    }
+    .footer-word-navy {
+      color: #0c2055;
+      transition: color 0.2s ease;
+    }
+    .footer-word-orange {
+      color: #ea580c;
+    }
+    body.dark-mode .footer-word-navy {
+      color: #ffffff;
+    }
+    .footer-tagline {
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #15803d;
+      margin-top: 3px;
+      font-family: var(--font-main);
+      transition: color 0.2s ease;
+    }
+    body.dark-mode .footer-tagline {
+      color: #4ade80;
+    }
+    .footer-desc {
+      max-width: 620px;
+      margin: 0 auto 22px auto;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .footer-nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px 24px;
+      margin-bottom: 24px;
+    }
+    .footer-nav-links a {
+      color: var(--text);
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: color 0.15s ease;
+      display: inline-block;
+    }
+    .footer-nav-links a:hover {
+      color: var(--brand);
+    }
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .footer-copy strong {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Strip -->
+  <div class="top-strip">
+    <div class="top-strip-left">
+      <span class="live-dot"></span>
+      <span>⚡ Fast &amp; Verified Government Recruitment Portal &#8226; 2026 Edition</span>
+    </div>
+    <div class="top-strip-right">
+      <a href="#ageCalculator">🧮 Age Calculator</a>
+      <a href="#resizerTool">📷 Photo Resizer</a>
+    </div>
+  </div>
+
+  <!-- Minimal Modern Header -->
+  <header class="saas-header">
+    <div class="header-inner">
+      <a class="brand-logo" href="#" title="Rojgaar Result — Government Job Portal">
+        <div class="brand-badge">
+          <img class="brand-badge-img" src="assets/favicon-192x192.png" alt="Rojgaar Result Icon" width="40" height="40" />
+        </div>
+        <div class="brand-text-col">
+          <div class="brand-title">
+            <span class="brand-word-navy">Rojgaar</span><span class="brand-word-orange">&nbsp;Result</span>
+          </div>
+          <div class="brand-tagline">GOVERNMENT JOB PORTAL</div>
+        </div>
+      </a>
+      <nav class="header-nav">
+        <a class="nav-btn active" href="#">Home</a>
+        <a class="nav-btn" href="#job">Latest Jobs</a>
+        <a class="nav-btn" href="#admit">Admit Card</a>
+        <a class="nav-btn" href="#result">Result</a>
+        <a class="nav-btn" href="#key">Answer Key</a>
+        <a class="nav-btn" href="#syl">Syllabus</a>
+        <a class="nav-btn" href="#ageCalculator">🧮 Age Calculator</a>
+        <a class="nav-btn nav-btn-highlight" href="#resizerTool">📷 Photo Resizer</a>
+        <button class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Live Instant Search & Quick Filter Chips -->
+  <div class="hero-search-area">
+    <div class="search-box-wrapper">
+      <input
+        type="text"
+        class="search-input"
+        id="site-search-input"
+        placeholder="Search by exam, department, or post (e.g. SSC, Railway, UPSC)..."
+        autocomplete="off"
+      />
+      <span class="search-icon">🔍</span>
+      <ul class="search-dropdown" id="search-results-list"></ul>
+    </div>
+
+    <!-- Quick Filter Chips -->
+    <div class="filter-chips-container">
+      <button class="chip-btn active" onclick="filterFeed('ALL', this)">🔥 All Updates</button>
+      <button class="chip-btn" onclick="filterFeed('SSC', this)">⚖️ SSC</button>
+      <button class="chip-btn" onclick="filterFeed('RAILWAY', this)">🚆 Railway (RRB)</button>
+      <button class="chip-btn" onclick="filterFeed('POLICE', this)">👮 Police Bharti</button>
+      <button class="chip-btn" onclick="filterFeed('BANK', this)">🏦 Banking / IBPS</button>
+      <button class="chip-btn" onclick="filterFeed('10TH', this)">🎓 10th/12th Pass</button>
+    </div>
+  </div>
+
+  <main class="main-container">
+
+    <!-- Homepage 5 Modern Cards Layout -->
+    <div id="home-boxes">
+      
+      <!-- Row 1: 3 Modern Cards -->
+      <div class="cards-grid-3">
+        <!-- 1. Results Card -->
+        <article class="feed-card card-order-res">
+          <div class="card-head head-res">
+            <span class="card-head-title">📊 Exam Results</span>
+            <span class="head-count-badge" id="badge-count-res">Live</span>
+          </div>
+          <ul class="card-body-list" id="list-result"></ul>
+          <div class="card-footer-box">
+            <a class="btn-more-link" href="#result">View All Results →</a>
+          </div>
+        </article>
+
+        <!-- 2. Admit Cards Card -->
+        <article class="feed-card card-order-adm">
+          <div class="card-head head-adm">
+            <span class="card-head-title">🎫 Admit Cards</span>
+            <span class="head-count-badge" id="badge-count-adm">Live</span>
+          </div>
+          <ul class="card-body-list" id="list-admit"></ul>
+          <div class="card-footer-box">
+            <a class="btn-more-link" href="#admit">View All Admit Cards →</a>
+          </div>
+        </article>
+
+        <!-- 3. Latest Recruitment Card -->
+        <article class="feed-card card-order-job">
+          <div class="card-head head-job">
+            <span class="card-head-title">💼 Latest Recruitment</span>
+            <span class="head-count-badge" id="badge-count-job">Live</span>
+          </div>
+          <ul class="card-body-list" id="list-job"></ul>
+          <div class="card-footer-box">
+            <a class="btn-more-link" href="#job">View All Jobs →</a>
+          </div>
+        </article>
+      </div>
+
+      <!-- Row 2: 2 Modern Cards -->
+      <div class="cards-grid-2">
+        <!-- 4. Answer Keys Card -->
+        <article class="feed-card">
+          <div class="card-head head-key">
+            <span class="card-head-title">🔑 Answer Keys</span>
+            <span class="head-count-badge" id="badge-count-key">Live</span>
+          </div>
+          <ul class="card-body-list" id="list-key"></ul>
+          <div class="card-footer-box">
+            <a class="btn-more-link" href="#key">View All Keys →</a>
+          </div>
+        </article>
+
+        <!-- 5. Exam Syllabus Card -->
+        <article class="feed-card">
+          <div class="card-head head-syl">
+            <span class="card-head-title">📚 Exam Syllabus</span>
+            <span class="head-count-badge" id="badge-count-syl">Live</span>
+          </div>
+          <ul class="card-body-list" id="list-syl"></ul>
+          <div class="card-footer-box">
+            <a class="btn-more-link" href="#syl">View All Syllabus →</a>
+          </div>
+        </article>
+      </div>
+
+      <!-- Aligned Standalone Age Calculator Frame -->
+      <div class="calc-container" id="ageCalculator">
+        <h3 class="calc-title">🧮 Live Govt Job Age Calculator</h3>
+        <p class="calc-subtitle">Recruitment cut-off date ke mutabiq exact age calculate karein.</p>
+
+        <div class="calc-fields">
+          <div class="field-box">
+            <label>Date of Birth (DOB):</label>
+            <input id="calcDob" type="date" />
+          </div>
+          <div class="field-box">
+            <label>Age As On (Cut-off Date):</label>
+            <input id="calcCutoff" type="date" value="2026-10-22" />
+          </div>
+          <div>
+            <button class="btn-calculate" id="calcAgeBtn" type="button" onclick="handleCalcAge()">Calculate Age</button>
+          </div>
+        </div>
+
+        <div class="calc-result-box" id="calcResultDisplay">
+          <div style="font-size:12.5px; font-weight:700; color:#065f46; text-transform:uppercase; margin-bottom:4px;">Aapki Exact Age:</div>
+          <div class="calc-result-metric" id="calcResultText"></div>
+        </div>
+      </div>
+
+      <!-- Standalone Photo & Signature Resizer Tool -->
+      <div class="calc-container" id="resizerTool" style="margin-top: 30px;">
+        <h3 class="calc-title" style="color: var(--brand);">📷 Online Photo &amp; Signature Resizer</h3>
+        <p class="calc-subtitle">Sarkari exam form ke liye photo aur signature ko exact dimensions aur KB me resize karein.</p>
+
+        <div style="margin-bottom:18px; text-align: left;">
+          <label style="font-weight:700; display:block; margin-bottom:6px; font-size:13px;">1. Select Image (Photo / Signature):</label>
+          <input accept="image/*" id="toolImgInput" style="width:100%; padding:10px; border:2px dashed var(--brand); border-radius:8px; background:var(--surface-hover); cursor:pointer;" type="file" />
+        </div>
+
+        <div class="calc-fields" style="margin-bottom: 18px;">
+          <div class="field-box">
+            <label>Width (px):</label>
+            <input id="toolWidth" placeholder="200" type="number" value="200" />
+          </div>
+          <div class="field-box">
+            <label>Height (px):</label>
+            <input id="toolHeight" placeholder="230" type="number" value="230" />
+          </div>
+          <div class="field-box">
+            <label>Max Size (KB):</label>
+            <input id="toolMaxKB" placeholder="50" type="number" value="50" />
+          </div>
+        </div>
+
+        <button class="btn-calculate" id="toolProcessBtn" style="width: 100%;" type="button" onclick="processImageResize()">
+          Resize &amp; Download Image
+        </button>
+
+        <div class="calc-result-box" id="toolResult" style="background: var(--surface-hover); border-color: var(--border);">
+          <h4 style="color:#16a34a; margin-bottom:8px; font-size:15px; font-weight:800;">✓ Image Processed!</h4>
+          <img id="toolPreview" style="max-width:180px; border:1px solid var(--border); padding:4px; border-radius:6px; display:block; margin:0 auto 10px;" />
+          <p id="toolMeta" style="font-size:13px; color:var(--text); font-weight:700; margin-bottom:12px;"></p>
+          <a download="resized_photo.jpg" id="toolDownload" class="btn-calculate" style="display:inline-block; text-decoration:none; padding:9px 20px;">Download Resized Image</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sample Single Post Preview with Social Share Bar -->
+    <div class="content-card-box" id="sample-post-preview" style="margin-top: 40px;">
+      <span class="org-badge badge-ssc" style="margin-bottom: 8px;">SSC RECRUITMENT 2026</span>
+      <h1 class="content-title">SSC CGL 2026 Notification Out — Apply Online for 17,727 Posts</h1>
+      
+      <!-- Top Social Share Bar -->
+      <div class="post-share-bar" id="post-share-top">
+        <span class="share-bar-label">📢 <b>Share Post:</b></span>
+        <div class="share-btn-group">
+          <button class="share-btn btn-wa" onclick="sharePostTo('whatsapp')" title="Share on WhatsApp" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <span>WhatsApp</span>
+          </button>
+          <button class="share-btn btn-fb" onclick="sharePostTo('facebook')" title="Share on Facebook" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            <span>Facebook</span>
+          </button>
+          <button class="share-btn btn-tg" onclick="sharePostTo('telegram')" title="Share on Telegram" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.197 1.006.128.832.946z"/></svg>
+            <span>Telegram</span>
+          </button>
+          <button class="share-btn btn-ig" onclick="sharePostTo('instagram')" title="Share on Instagram" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span>Instagram</span>
+          </button>
+          <button class="share-btn btn-copy" onclick="copyPostUrl(this)" title="Copy Direct Link" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+            <span class="copy-btn-text">Copy Link</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="content-body-area">
+        <!-- Auto-Generated 1200x630 Recruitment Banner -->
+        <div class="post-featured-banner" id="sample-banner-box">
+          <img src="banners/bhel_artisan_various_trade_post_online_form_2026.jpg" alt="BHEL Artisan Various Trade Post Online Form 2026 Banner" width="1200" height="630" />
+        </div>
+
+        <p style="background:#f8fafc; border-left:4px solid #2563eb; padding:14px 18px; margin-bottom:20px; font-size:14.5px; color:#334155; line-height:1.7; border-radius:0 6px 6px 0;">
+          The <strong>BHEL Artisan</strong> has officially announced the recruitment notification for <strong>BHEL Artisan Various Trade Post</strong> for the 2026 recruitment cycle. Eligible aspirants seeking government career opportunities can review the complete eligibility norms, qualification requirements, category-wise vacancies, age limits, and selection procedure below. Complete your online registration before the deadline using the verified direct application links.
+        </p>
+
+        <!-- Realistic Quick Overview Table as Scraped -->
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #cbd5e1; border-radius: 8px;">
+          <thead>
+            <tr style="background: #0284c7; color: #ffffff;">
+              <th colspan="2" style="padding: 12px 16px; text-align: left; font-size: 16px; font-weight: 700;">
+                📌 BHEL Artisan Various Trade Post Online Form 2026 - Quick Overview
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 600; width: 35%; background: #f8fafc;">Conducting Authority</td>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1;">BHEL Artisan</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 600; background: #f8fafc;">Post / Exam Name</td>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1;">BHEL Artisan Various Trade Post</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 600; background: #f8fafc;">Update Category</td>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1;"><span style="background:#16a34a; color:#fff; padding:3px 10px; border-radius:4px; font-size:12px; font-weight:600;">Latest Jobs</span></td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 600; background: #f8fafc;">Process Mode</td>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1;">Online Portal</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 600; background: #f8fafc;">Official Verification</td>
+              <td style="padding: 10px 14px; border: 1px solid #cbd5e1; color: #16a34a; font-weight: 600;">✔ Verified Notification</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bottom Social Share CTA Box -->
+      <div class="post-share-cta-box" id="post-share-bottom">
+        <div class="share-cta-header">
+          <span class="share-cta-icon">🤝</span>
+          <div>
+            <h4 class="share-cta-title">Doston ke sath share karein! (Help your friends prepare)</h4>
+            <p class="share-cta-subtitle">Is vacancy aur exam details ko apne doston aur study groups me share karein.</p>
+          </div>
+        </div>
+        <div class="share-btn-group">
+          <button class="share-btn btn-wa share-btn-lg" onclick="sharePostTo('whatsapp')" title="Share on WhatsApp" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <span>Share on WhatsApp</span>
+          </button>
+          <button class="share-btn btn-fb share-btn-lg" onclick="sharePostTo('facebook')" title="Share on Facebook" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            <span>Share on Facebook</span>
+          </button>
+          <button class="share-btn btn-tg share-btn-lg" onclick="sharePostTo('telegram')" title="Share on Telegram" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.197 1.006.128.832.946z"/></svg>
+            <span>Share on Telegram</span>
+          </button>
+          <button class="share-btn btn-ig share-btn-lg" onclick="sharePostTo('instagram')" title="Share on Instagram" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span>Share on Instagram</span>
+          </button>
+          <button class="share-btn btn-copy share-btn-lg" onclick="copyPostUrl(this)" title="Copy Direct Link" type="button">
+            <svg class="share-svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+            <span class="copy-btn-text">Copy Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Mobile App Floating Bottom Navigation Dock -->
+  <nav class="mobile-dock">
+    <a class="dock-tab active" href="#">
+      <span class="dock-icon">🏠</span>
+      <span>Home</span>
+    </a>
+    <a class="dock-tab" href="#job">
+      <span class="dock-icon">💼</span>
+      <span>Jobs</span>
+    </a>
+    <a class="dock-tab" href="#admit">
+      <span class="dock-icon">🎫</span>
+      <span>Admit</span>
+    </a>
+    <a class="dock-tab" href="#result">
+      <span class="dock-icon">📊</span>
+      <span>Result</span>
+    </a>
+    <a class="dock-tab" href="#ageCalculator">
+      <span class="dock-icon">🧮</span>
+      <span>Age Calc</span>
+    </a>
+    <a class="dock-tab" href="javascript:void(0)" onclick="toggleTheme()">
+      <span class="dock-icon">🌓</span>
+      <span>Theme</span>
+    </a>
+  </nav>
+
+  <!-- Clean Centered Footer with Brand Logo -->
+  <footer class="saas-footer">
+    <div class="footer-inner">
+      <!-- Website Logo & Tagline -->
+      <a class="footer-brand" href="#" title="Rojgaar Result — Government Job Portal &amp; Sarkari Naukri">
+        <div class="footer-badge">
+          <img alt="Rojgaar Result Icon" class="footer-badge-img" height="44" src="assets/favicon-192x192.png" width="44" />
+        </div>
+        <div class="footer-text-col">
+          <div class="footer-title">
+            <span class="footer-word-navy">Rojgaar</span> <span class="footer-word-orange">Result</span>
+          </div>
+          <div class="footer-tagline">Government Job Portal OR Sarkari Naukri</div>
+        </div>
+      </a>
+      
+      <p class="footer-desc">India’s verified government job recruitment portal. Providing fastest updates on Sarkari Naukri, Online Application Forms, Exam Admit Cards, Answer Keys and Results.</p>
+
+      <div class="footer-nav-links">
+        <a href="#about">About Us</a>
+        <a href="#contact">Contact Us</a>
+        <a href="#privacy">Privacy Policy</a>
+        <a href="#disclaimer">Disclaimer</a>
+        <a href="#ageCalculator">Age Calculator</a>
+        <a href="#resizerTool">Photo Resizer</a>
+      </div>
+
+      <div class="footer-copy">
+        <p>© 2026 <strong>Rojgaar Result</strong> (rojgaarresult.com) — Fastest Verified Government Job Portal | Sarkari Naukri. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mock Script for Testing the 5-Box Grid -->
+  <script>
+    var mockPosts = [
+      // Results
+      { title: "NEET UG 2026 1st Round Allotment Result Out", cat: "Result", link: "#" },
+      { title: "HPSC PGT Computer Science Final Result 2026", cat: "Result", link: "#" },
+      { title: "UP DElEd 2026 Allotment Result Declared", cat: "Result", link: "#" },
+      { title: "RPSC School Lecturer PGT Result 2026 Updated", cat: "Result", link: "#" },
+      { title: "Delhi DSSSB Various Posts Result 2026", cat: "Result", link: "#" },
+      { title: "UPSC CDS-II Final Result With Marks 2026", cat: "Result", link: "#" },
+      { title: "BPSC Auditor Pre Result 2026 Out", cat: "Result", link: "#" },
+      { title: "SBI Apprentice Final Result 2026 Out", cat: "Result", link: "#" },
+      { title: "UP SCVTUP ITI 1st Round Allotment Result 2026", cat: "Result", link: "#" },
+      { title: "RSSB Clerk Jr-II / Junior Assistant Score Card", cat: "Result", link: "#" },
+
+      // Admit Cards
+      { title: "MPPSC ADPO Admit Card 2026 Released", cat: "Admit Card", link: "#" },
+      { title: "BSF HC RO / RM Admit Card 2026", cat: "Admit Card", link: "#" },
+      { title: "RRB ALP CBAT Exam City Details 2026 Out", cat: "Admit Card", link: "#" },
+      { title: "Bihar STET Admit Card 2026 Download", cat: "Admit Card", link: "#" },
+      { title: "CBSE Group A, B, C Skill Test Admit Card 2026", cat: "Admit Card", link: "#" },
+      { title: "HSSC CET Group C PMT Admit Card 2026", cat: "Admit Card", link: "#" },
+      { title: "Delhi High Court JJA Mains Admit Card 2026", cat: "Admit Card", link: "#" },
+      { title: "SSC CPO SI CAPF Exam Date & Slip 2026", cat: "Admit Card", link: "#" },
+      { title: "SSC Junior Engineer JE Exam Date 2026", cat: "Admit Card", link: "#" },
+      { title: "Railway RRB ALP Revised Application Status 2026", cat: "Admit Card", link: "#" },
+
+      // Latest Jobs
+      { title: "HPSC Food Safety Officer (FSO) Online Form 2026", cat: "Job", link: "#" },
+      { title: "Supreme Court SPA Online Form 2026 Start", cat: "Job", link: "#" },
+      { title: "Railway RRB Station Master Online Form 2026", cat: "Job", link: "#" },
+      { title: "ISRO SDSC SHAR Various Post Online Form 2026", cat: "Job", link: "#" },
+      { title: "Railway RRB Isolated Categories Online Form 2026", cat: "Job", link: "#" },
+      { title: "MP High Court Stenographer & Assistant Form 2026", cat: "Job", link: "#" },
+      { title: "Indian Coast Guard CGEPT 01/2027 Online Form", cat: "Job", link: "#" },
+      { title: "UP Anganwadi Bharti Online Form 2026 (10th Pass)", cat: "Job", link: "#" },
+      { title: "Supreme Court of India Junior Court Assistant 2026", cat: "Job", link: "#" },
+      { title: "NICL Administrative Officer Online Form 2026", cat: "Job", link: "#" },
+
+      // Answer Keys
+      { title: "Indian Airforce Group Y / Medical Assistant Answer Key 2026", cat: "Answer Key", link: "#" },
+      { title: "NBEMS Group A, B & C Various Post Answer Key 2026", cat: "Answer Key", link: "#" },
+      { title: "MPESB Group-2 Sub Group-4 Patwari Answer Key 2026", cat: "Answer Key", link: "#" },
+      { title: "SSC Stenographer Answer Key 2026 Out", cat: "Answer Key", link: "#" },
+      { title: "RRB NTPC 10+2 UG CBT-II Answer Key 2026 Out", cat: "Answer Key", link: "#" },
+      { title: "UPSSSC Forest Guard / Wildlife Guard Answer Key 2026", cat: "Answer Key", link: "#" },
+
+      // Syllabus
+      { title: "Bihar STET Admit Card 2026 Syllabus & Exam Pattern", cat: "Syllabus", link: "#" },
+      { title: "AAI Junior Executive & Manager Exam Pattern 2026", cat: "Syllabus", link: "#" },
+      { title: "CTET September Exam Date & Detailed Syllabus 2026", cat: "Syllabus", link: "#" },
+      { title: "SSC CHSL 10+2 Online Form 2026 Subject Wise Syllabus", cat: "Syllabus", link: "#" },
+      { title: "RRB NTPC Graduate Level Online Form 2026 Syllabus", cat: "Syllabus", link: "#" },
+      { title: "BPSC School Teacher TRE 4.0 Detailed Syllabus 2026", cat: "Syllabus", link: "#" }
+    ];
+
+    var rawFeedEntries = mockPosts;
+    var globalAllPosts = mockPosts;
+
+    function getSmartBadges(title) {
+      var t = title.toUpperCase();
+      var org = '';
+      var urgency = '';
+
+      if (t.indexOf('SSC') > -1) org = '<span class="org-badge badge-ssc">SSC</span>';
+      else if (t.indexOf('RAILWAY') > -1 || t.indexOf('RRB') > -1) org = '<span class="org-badge badge-rrb">RRB</span>';
+      else if (t.indexOf('POLICE') > -1 || t.indexOf('CONSTABLE') > -1 || t.indexOf('BSF') > -1 || t.indexOf('AIRFORCE') > -1) org = '<span class="org-badge badge-police">DEFENCE</span>';
+      else if (t.indexOf('BANK') > -1 || t.indexOf('IBPS') > -1 || t.indexOf('SBI') > -1) org = '<span class="org-badge badge-bank">BANK</span>';
+      else if (t.indexOf('UPSC') > -1 || t.indexOf('BPSC') > -1 || t.indexOf('MPPSC') > -1 || t.indexOf('HPSC') > -1 || t.indexOf('RPSC') > -1 || t.indexOf('UPSSSC') > -1) org = '<span class="org-badge badge-upsc">PSC</span>';
+      else org = '<span class="org-badge badge-default">GOVT</span>';
+
+      if (t.indexOf('LAST DATE') > -1 || t.indexOf('ENDING') > -1 || t.indexOf('OUT') > -1) {
+        urgency = '<span class="urgency-badge urgency-ending">⏳ Live</span>';
+      }
+      return { org: org, urgency: urgency };
+    }
+
+    // ==========================================
+    // SOCIAL MEDIA SHARING ENGINE (v2.0)
+    // ==========================================
+    function sharePostTo(platform) {
+      var url = window.location.href.split('#')[0];
+      var titleEl = document.querySelector('.content-title');
+      var title = titleEl ? titleEl.innerText : document.title;
+      title = title.replace(/\s+/g, ' ').trim();
+
+      var text = '🔥 ' + title + '\n\nCheck official details, syllabus & online form here:\n' + url;
+
+      if (platform === 'whatsapp') {
+        window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+      } else if (platform === 'facebook') {
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank');
+      } else if (platform === 'telegram') {
+        window.open('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent('🔥 ' + title), '_blank');
+      } else if (platform === 'instagram') {
+        if (navigator.share && /android|iphone|ipad|mobile/i.test(navigator.userAgent)) {
+          navigator.share({ title: title, text: text, url: url }).catch(function() {});
+        } else {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url);
+          }
+          alert('Post link copy ho gaya hai! Ab aap ise Instagram DM ya Story me share kar sakte hain.');
+          window.open('https://www.instagram.com/', '_blank');
+        }
+      } else if (platform === 'native') {
+        if (navigator.share) {
+          navigator.share({ title: title, text: title, url: url }).catch(function() {});
+        } else {
+          window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+        }
+      }
+    }
+
+    function copyPostUrl(btnEl) {
+      var url = window.location.href.split('#')[0];
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() {
+          showCopiedFeedback(btnEl);
+        }).catch(function() {
+          fallbackCopy(url, btnEl);
+        });
+      } else {
+        fallbackCopy(url, btnEl);
+      }
+    }
+
+    function fallbackCopy(text, btnEl) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showCopiedFeedback(btnEl);
+      } catch(e) {}
+      document.body.removeChild(ta);
+    }
+
+    function showCopiedFeedback(btnEl) {
+      if (!btnEl) return;
+      var textSpan = btnEl.querySelector('.copy-btn-text') || btnEl;
+      var oldText = textSpan.innerText;
+      textSpan.innerText = 'Copied! ✔';
+      btnEl.style.background = '#22c55e';
+      btnEl.style.color = '#ffffff';
+      btnEl.style.borderColor = '#16a34a';
+      setTimeout(function() {
+        textSpan.innerText = oldText;
+        btnEl.style.background = '';
+        btnEl.style.color = '';
+        btnEl.style.borderColor = '';
+      }, 2200);
+    }
+
+    function openPreviewPost(title, cat) {
+      var previewBox = document.getElementById('sample-post-preview');
+      if (previewBox) {
+        var titleEl = previewBox.querySelector('.content-title');
+        if (titleEl) titleEl.innerText = title;
+        var badgeEl = previewBox.querySelector('.org-badge');
+        var smart = getSmartBadges(title);
+        if (badgeEl) badgeEl.outerHTML = smart.org;
+        previewBox.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function shareToWhatsApp(title, link) {
+      var text = '🔥 Check this update: ' + title + '\n' + window.location.origin + link;
+      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+    }
+
+    function renderHomepageBoxes(filterTag) {
+      var resList = document.getElementById('list-result');
+      var admList = document.getElementById('list-admit');
+      var jobList = document.getElementById('list-job');
+      var keyList = document.getElementById('list-key');
+      var sylList = document.getElementById('list-syl');
+
+      if (!resList || !admList || !jobList) return;
+
+      var resHtml = '', admHtml = '', jobHtml = '', keyHtml = '', sylHtml = '';
+      var cRes = 0, cAdm = 0, cJob = 0, cKey = 0, cSyl = 0;
+
+      rawFeedEntries.forEach(function(p) {
+        var tl = p.title.toUpperCase();
+
+        if (filterTag && filterTag !== 'ALL') {
+          if (filterTag === 'SSC' && tl.indexOf('SSC') === -1) return;
+          if (filterTag === 'RAILWAY' && tl.indexOf('RAILWAY') === -1 && tl.indexOf('RRB') === -1) return;
+          if (filterTag === 'POLICE' && tl.indexOf('POLICE') === -1 && tl.indexOf('CONSTABLE') === -1 && tl.indexOf('BSF') === -1 && tl.indexOf('AIRFORCE') === -1) return;
+          if (filterTag === 'BANK' && tl.indexOf('BANK') === -1 && tl.indexOf('IBPS') === -1 && tl.indexOf('SBI') === -1) return;
+          if (filterTag === '10TH' && tl.indexOf('10TH') === -1 && tl.indexOf('12TH') === -1 && tl.indexOf('INTER') === -1 && tl.indexOf('MATRIC') === -1) return;
+        }
+
+        var badges = getSmartBadges(p.title);
+        var safeTitle = p.title.replace(/'/g, "\\'");
+        var item = '<li>' + badges.org + 
+                   '<a href="javascript:void(0)" onclick="openPreviewPost(\'' + safeTitle + '\', \'' + p.cat + '\')">' + p.title + '</a>' + 
+                   badges.urgency +
+                   '<button class="btn-item-share" onclick="shareToWhatsApp(\'' + safeTitle + '\', \'' + p.link + '\')" title="Share to WhatsApp">💬</button>' +
+                   '</li>';
+
+        if (p.cat === 'Answer Key') {
+          if (cKey < 15) { keyHtml += item; cKey++; }
+        } else if (p.cat === 'Syllabus') {
+          if (cSyl < 15) { sylHtml += item; cSyl++; }
+        } else if (p.cat === 'Result') {
+          if (cRes < 20) { resHtml += item; cRes++; }
+        } else if (p.cat === 'Admit Card') {
+          if (cAdm < 20) { admHtml += item; cAdm++; }
+        } else {
+          if (cJob < 20) { jobHtml += item; cJob++; }
+        }
+      });
+
+      resList.innerHTML = resHtml || '<li style="color:#64748b;">No updates found.</li>';
+      admList.innerHTML = admHtml || '<li style="color:#64748b;">No updates found.</li>';
+      jobList.innerHTML = jobHtml || '<li style="color:#64748b;">No updates found.</li>';
+      if (keyList) keyList.innerHTML = keyHtml || '<li style="color:#64748b;">No updates found.</li>';
+      if (sylList) sylList.innerHTML = sylHtml || '<li style="color:#64748b;">No updates found.</li>';
+    }
+
+    window.filterFeed = function(tag, btnEl) {
+      document.querySelectorAll('.chip-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (btnEl) btnEl.classList.add('active');
+      renderHomepageBoxes(tag);
+    };
+
+    function applySavedTheme() {
+      var saved = localStorage.getItem('sr_dark_mode');
+      var body = document.body;
+      var icon = document.getElementById('theme-icon');
+      if (saved === 'enabled') {
+        body.classList.add('dark-mode');
+        if (icon) icon.innerText = '☀️';
+      } else {
+        body.classList.remove('dark-mode');
+        if (icon) icon.innerText = '🌙';
+      }
+    }
+
+    function toggleTheme() {
+      var body = document.body;
+      var isDark = body.classList.contains('dark-mode');
+      localStorage.setItem('sr_dark_mode', isDark ? 'disabled' : 'enabled');
+      applySavedTheme();
+    }
+
+    function handleCalcAge() {
+      var dobVal = document.getElementById('calcDob').value;
+      var cutoffVal = document.getElementById('calcCutoff').value;
+      var resultBox = document.getElementById('calcResultDisplay');
+      var resultText = document.getElementById('calcResultText');
+
+      if (!dobVal || !cutoffVal) {
+        alert('Kripya Date of Birth aur Cut-off Date dono select karein.');
+        return;
+      }
+
+      var birthDate = new Date(dobVal);
+      var targetDate = new Date(cutoffVal);
+
+      if (birthDate > targetDate) {
+        alert('Date of Birth cut-off date se pehle ki honi chahiye.');
+        return;
+      }
+
+      var years = targetDate.getFullYear() - birthDate.getFullYear();
+      var months = targetDate.getMonth() - birthDate.getMonth();
+      var days = targetDate.getDate() - birthDate.getDate();
+
+      if (days < 0) {
+        months--;
+        var prevMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      resultText.innerText = years + ' Saal, ' + months + ' Mahine, ' + days + ' Din';
+      resultBox.style.display = 'block';
+    }
+
+    // Photo Resizer Canvas
+    var loadedImg = new Image();
+    document.getElementById('toolImgInput').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (file) {
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          loadedImg.onload = function() {
+            document.getElementById('toolWidth').value = loadedImg.naturalWidth;
+            document.getElementById('toolHeight').value = loadedImg.naturalHeight;
+          };
+          loadedImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function processImageResize() {
+      if (!loadedImg.src) {
+        alert('Kripya pehle image file select karein.');
+        return;
+      }
+
+      var tw = parseInt(document.getElementById('toolWidth').value) || loadedImg.naturalWidth;
+      var th = parseInt(document.getElementById('toolHeight').value) || loadedImg.naturalHeight;
+      var maxKB = parseFloat(document.getElementById('toolMaxKB').value);
+
+      var canvas = document.createElement('canvas');
+      canvas.width = tw;
+      canvas.height = th;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(loadedImg, 0, 0, tw, th);
+
+      var quality = 0.92;
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+      if (maxKB) {
+        while (quality > 0.08) {
+          var curKB = (dataUrl.length * (3/4)) / 1024;
+          if (curKB <= maxKB) break;
+          quality -= 0.08;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+      }
+
+      var finalKB = ((dataUrl.length * (3/4)) / 1024).toFixed(1);
+      document.getElementById('toolPreview').src = dataUrl;
+      document.getElementById('toolDownload').href = dataUrl;
+      document.getElementById('toolMeta').innerText = 'Size: ' + tw + 'x' + th + ' px | File Size: ' + finalKB + ' KB';
+      document.getElementById('toolResult').style.display = 'block';
+    }
+
+    // Search drop down
+    var searchInput = document.getElementById('site-search-input');
+    var searchList = document.getElementById('search-results-list');
+    searchInput.addEventListener('input', function() {
+      var q = this.value.trim().toLowerCase();
+      if (q.length < 2) {
+        searchList.style.display = 'none';
+        return;
+      }
+      var matched = mockPosts.filter(function(p) {
+        return p.title.toLowerCase().indexOf(q) > -1;
+      }).slice(0, 8);
+
+      if (matched.length > 0) {
+        var h = '';
+        matched.forEach(function(m) {
+          h += '<li onclick="window.location.href=\'' + m.link + '\'">' +
+                 getSmartBadges(m.title).org +
+                 '<span>' + m.title + '</span>' +
+               '</li>';
+        });
+        searchList.innerHTML = h;
+        searchList.style.display = 'block';
+      } else {
+        searchList.innerHTML = '<li style="color:#64748b; text-align:center;">No matching vacancy found</li>';
+        searchList.style.display = 'block';
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.search-box-wrapper')) {
+        searchList.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      applySavedTheme();
+      renderHomepageBoxes('ALL');
+    });
+  </script>
+</body>
+</html>
