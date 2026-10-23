@@ -8,7 +8,12 @@ import base64
 import requests
 from bs4 import BeautifulSoup
 import urllib3
-from PIL import Image, ImageDraw, ImageFont
+try:
+    from PIL import Image, ImageDraw, ImageFont
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+    Image = ImageDraw = ImageFont = None
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
@@ -354,6 +359,8 @@ def draw_checkmark(draw, x, y, size=18, color=(16, 185, 129)):
     draw.line([p2, p3], fill=color, width=3)
 
 def create_recruitment_banner(title, category_name="Latest Jobs", authority_name=""):
+    if not HAS_PIL or Image is None:
+        raise RuntimeError("Pillow is not installed. Install it with `pip install Pillow`.")
     w, h = 1200, 630
     img = Image.new("RGB", (w, h), color=(10, 15, 26))
     draw = ImageDraw.Draw(img)
