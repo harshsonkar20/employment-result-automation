@@ -34,7 +34,7 @@ jobs:
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 google-api-python-client google-auth-oauthlib google-auth-httplib2
+          pip install requests beautifulsoup4 google-api-python-client google-auth-oauthlib google-auth-httplib2 Pillow
 
       - name: Execute Scraper & Publish Posts
         env:
@@ -44,11 +44,12 @@ jobs:
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
         run: python scraper_bot.py
 
-      - name: Save Cache to Repository
+      - name: Save Cache and Banners to Repository
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           touch published_cache.json
-          git add published_cache.json
-          git commit -m "Sync published cache [skip ci]" || echo "No changes to commit"
+          mkdir -p banners assets
+          git add published_cache.json banners/ assets/
+          git commit -m "Sync published cache, assets, and auto-generated banners [skip ci]" || echo "No changes to commit"
           git push || echo "Git push skipped"
