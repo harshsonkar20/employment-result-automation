@@ -351,7 +351,7 @@ def get_font(size, bold=False):
     except Exception:
         return ImageFont.load_default()
 
-def draw_checkmark(draw, x, y, size=18, color=(16, 185, 129)):
+def draw_checkmark(draw, x, y, size=22, color=(16, 185, 129)):
     p1 = (x, y + size * 0.55)
     p2 = (x + size * 0.35, y + size * 0.9)
     p3 = (x + size * 0.95, y + size * 0.15)
@@ -398,63 +398,72 @@ def create_recruitment_banner(title, category_name="Latest Jobs", authority_name
     draw.rounded_rectangle([(32, 28), (w - 32, h - 28)], radius=20, outline=(51, 65, 85), width=2)
     draw.rounded_rectangle([(35, 31), (w - 35, h - 31)], radius=18, outline=(25, 36, 56), width=1)
 
-    # --- TOP ROW: EMBEDDED OFFICIAL LOGO (Left) + CATEGORY PILL (Right) ---
+    # --- TOP ROW: EMBEDDED HIGH-RES OFFICIAL LOGO & BRAND CARD ---
     logo_path = os.path.join(os.path.dirname(__file__), "assets", "logo_pill.png")
+    card_x = 55
+    card_y = 40
+    target_h = 88
     if os.path.exists(logo_path):
         try:
             logo_pill = Image.open(logo_path).convert("RGBA")
-            target_h = 64
             aspect = logo_pill.width / logo_pill.height
             target_w = int(target_h * aspect)
             logo_resized = logo_pill.resize((target_w, target_h), Image.LANCZOS)
-            img.paste(logo_resized, (65, 42), logo_resized)
+            # Subtle drop shadow behind brand pill
+            draw.rounded_rectangle([(card_x + 2, card_y + 3), (card_x + target_w + 2, card_y + target_h + 3)], radius=15, fill=(15, 23, 42))
+            img.paste(logo_resized, (card_x, card_y), logo_resized)
+            brand_end_x = card_x + target_w
         except Exception:
-            draw.ellipse([(65, 58), (79, 72)], fill=(34, 197, 94))
-            font_brand = get_font(24, bold=True)
-            draw.text((90, 52), SITE_BRAND_NAME, fill=(255, 255, 255), font=font_brand)
+            brand_end_x = 520
     else:
-        draw.ellipse([(65, 58), (79, 72)], fill=(34, 197, 94))
-        font_brand = get_font(24, bold=True)
-        draw.text((90, 52), SITE_BRAND_NAME, fill=(255, 255, 255), font=font_brand)
+        # Dynamic fallback brand card
+        brand_w = 465
+        draw.rounded_rectangle([(card_x, card_y), (card_x + brand_w, card_y + target_h)], radius=15, fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+        font_brand = get_font(33, bold=True)
+        draw.text((card_x + 20, card_y + 14), SITE_BRAND_NAME, fill=(15, 23, 42), font=font_brand)
+        font_sub = get_font(13, bold=True)
+        draw.text((card_x + 20, card_y + 52), "GOVERNMENT JOB PORTAL • SARKARI NAUKRI", fill=(21, 128, 61), font=font_sub)
+        brand_end_x = card_x + brand_w
 
     # Live Badge next to logo
-    draw.ellipse([(285, 54), (297, 66)], fill=(34, 197, 94))
-    font_live = get_font(13, bold=True)
-    draw.text((305, 53), "OFFICIAL 2026 RECRUITMENT", fill=(147, 197, 253), font=font_live)
-    font_portal = get_font(12, bold=False)
-    draw.text((305, 71), "FASTEST VERIFIED GOVT JOB ALERTS", fill=(148, 163, 184), font=font_portal)
+    live_x = brand_end_x + 28
+    draw.ellipse([(live_x, 63), (live_x + 14, 77)], fill=(34, 197, 94))
+    font_live = get_font(16, bold=True)
+    draw.text((live_x + 22, 54), "OFFICIAL 2026 RECRUITMENT", fill=(147, 197, 253), font=font_live)
+    font_portal = get_font(13.5, bold=False)
+    draw.text((live_x + 22, 75), "FASTEST VERIFIED GOVT JOB ALERTS", fill=(148, 163, 184), font=font_portal)
 
-    # Category Pill
-    font_badge = get_font(17, bold=True)
+    # Category Pill on the far right
+    font_badge = get_font(21, bold=True)
     cat_label = category_name.upper()
     cat_bbox = draw.textbbox((0, 0), cat_label, font=font_badge)
     cat_text_w = cat_bbox[2] - cat_bbox[0]
-    pill_w = cat_text_w + 38
-    pill_x1 = w - 65 - pill_w
-    draw.rounded_rectangle([(pill_x1, 48), (w - 65, 92)], radius=10, fill=badge_bg, outline=accent, width=2)
-    draw.text((pill_x1 + 19, 59), cat_label, fill=(255, 255, 255), font=font_badge)
+    pill_w = cat_text_w + 46
+    pill_x1 = w - 55 - pill_w
+    draw.rounded_rectangle([(pill_x1, 50), (w - 55, 104)], radius=12, fill=badge_bg, outline=accent, width=2)
+    draw.text((pill_x1 + 23, 63), cat_label, fill=(255, 255, 255), font=font_badge)
 
     # Separator Line
-    draw.line([(65, 120), (w - 65, 120)], fill=(51, 65, 85), width=1)
+    draw.line([(55, 145), (w - 55, 145)], fill=(51, 65, 85), width=1)
 
     # --- ROW 2: AUTHORITY BADGE ---
     auth = authority_name if authority_name else "EXAM CONDUCTING AUTHORITY"
-    font_auth = get_font(19, bold=True)
+    font_auth = get_font(22, bold=True)
     auth_text = auth.upper()
     bbox_auth = draw.textbbox((0, 0), auth_text, font=font_auth)
-    auth_box_w = min(bbox_auth[2] - bbox_auth[0] + 32, w - 130)
-    draw.rounded_rectangle([(65, 138), (65 + auth_box_w, 178)], radius=8, fill=(15, 23, 42), outline=(59, 130, 246), width=1)
-    draw.text((81, 146), auth_text, fill=(147, 197, 253), font=font_auth)
+    auth_box_w = min(bbox_auth[2] - bbox_auth[0] + 36, w - 110)
+    draw.rounded_rectangle([(55, 158), (55 + auth_box_w, 204)], radius=8, fill=(15, 23, 42), outline=(59, 130, 246), width=2)
+    draw.text((73, 167), auth_text, fill=(147, 197, 253), font=font_auth)
 
-    # --- ROW 3: MAIN POST TITLE (Auto Wrapped) ---
-    font_title = get_font(38, bold=True)
+    # --- ROW 3: MAIN POST TITLE (Auto Wrapped, Increased Font Size) ---
+    font_title = get_font(44, bold=True)
     words = title.split()
     lines = []
     cur = ""
     for word in words:
         test = (cur + " " + word).strip()
         bbox = draw.textbbox((0, 0), test, font=font_title)
-        if (bbox[2] - bbox[0]) < (w - 150):
+        if (bbox[2] - bbox[0]) < (w - 130):
             cur = test
         else:
             if cur:
@@ -464,39 +473,41 @@ def create_recruitment_banner(title, category_name="Latest Jobs", authority_name
         lines.append(cur)
     lines = lines[:3]
 
-    y_t = 205
+    y_t = 228
     for ln in lines:
-        draw.text((67, y_t + 2), ln, fill=(0, 0, 0), font=font_title)
-        draw.text((65, y_t), ln, fill=(255, 255, 255), font=font_title)
-        y_t += 54
+        draw.text((57, y_t + 2), ln, fill=(0, 0, 0), font=font_title)
+        draw.text((55, y_t), ln, fill=(255, 255, 255), font=font_title)
+        y_t += 58
 
-    # --- ROW 4: 3 FEATURE PILLS ---
-    font_pill = get_font(17, bold=True)
+    # --- ROW 4: 3 FEATURE PILLS (Increased Font Size & Box Dimensions) ---
+    font_pill = get_font(20, bold=True)
     pills = ["Official Notification", "100% Online Portal", "Verified Govt Update"]
-    px = 65
-    py = max(y_t + 26, 405)
+    px = 55
+    py = max(y_t + 20, 420)
+    box_w = 270
+    box_h = 52
     for p_txt in pills:
-        draw.rounded_rectangle([(px, py), (px + 235, py + 46)], radius=10, fill=(15, 23, 42), outline=(51, 65, 85), width=1)
-        draw_checkmark(draw, px + 15, py + 13, size=18, color=accent)
-        draw.text((px + 45, py + 13), p_txt, fill=(226, 232, 240), font=font_pill)
-        px += 250
+        draw.rounded_rectangle([(px, py), (px + box_w, py + box_h)], radius=12, fill=(15, 23, 42), outline=(51, 65, 85), width=1)
+        draw_checkmark(draw, px + 16, py + 15, size=22, color=accent)
+        draw.text((px + 48, py + 14), p_txt, fill=(226, 232, 240), font=font_pill)
+        px += box_w + 18
 
-    # --- ROW 5: FOOTER & CALL TO ACTION ---
+    # --- ROW 5: FOOTER & CALL TO ACTION (Increased Font Sizes) ---
     b_top = h - 96
-    draw.line([(65, b_top), (w - 65, b_top)], fill=(51, 65, 85), width=1)
+    draw.line([(55, b_top), (w - 55, b_top)], fill=(51, 65, 85), width=1)
 
-    font_foot = get_font(16, bold=False)
-    draw.text((65, b_top + 28), "rojgaarresult.com  |  Fastest Verified Government Updates", fill=(148, 163, 184), font=font_foot)
+    font_foot = get_font(18, bold=True)
+    draw.text((55, b_top + 28), "rojgaarresult.com  |  Fastest Verified Government Updates", fill=(148, 163, 184), font=font_foot)
 
-    font_cta = get_font(18, bold=True)
+    font_cta = get_font(20, bold=True)
     cta_bbox = draw.textbbox((0, 0), cta_text, font=font_cta)
-    btn_w = cta_bbox[2] - cta_bbox[0] + 46
-    btn_x = w - 65 - btn_w
-    draw.rounded_rectangle([(btn_x, b_top + 16), (w - 65, b_top + 62)], radius=10, fill=accent)
-    draw.text((btn_x + 23, b_top + 26), cta_text, fill=(255, 255, 255), font=font_cta)
+    btn_w = cta_bbox[2] - cta_bbox[0] + 50
+    btn_x = w - 55 - btn_w
+    draw.rounded_rectangle([(btn_x, b_top + 16), (w - 55, b_top + 64)], radius=10, fill=accent)
+    draw.text((btn_x + 25, b_top + 25), cta_text, fill=(255, 255, 255), font=font_cta)
 
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=90, optimize=True)
+    img.save(buf, format="JPEG", quality=92, optimize=True)
     return buf.getvalue()
 
 def upload_banner_image(image_bytes, filename="job_banner.jpg"):
