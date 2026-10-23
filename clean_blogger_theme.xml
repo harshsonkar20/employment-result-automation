@@ -103,8 +103,8 @@
     .top-strip {
       background: #0f172a;
       color: #93c5fd;
-      padding: 8px 16px;
-      font-size: 12.5px;
+      padding: 9px 18px;
+      font-size: 13.5px;
       font-weight: 600;
       letter-spacing: 0.3px;
       display: flex;
@@ -133,7 +133,7 @@
     }
     .top-strip-right a {
       color: #cbd5e1;
-      font-size: 11.5px;
+      font-size: 12.5px;
       transition: color 0.2s;
     }
     .top-strip-right a:hover {
@@ -142,7 +142,7 @@
 
     /* Minimal Modern Header (Glassmorphic) */
     .saas-header {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
@@ -153,10 +153,10 @@
       transition: background 0.3s;
     }
     body.dark-mode .saas-header {
-      background: rgba(15, 23, 42, 0.92);
+      background: rgba(15, 23, 42, 0.94);
     }
     .header-inner {
-      max-width: 1240px;
+      max-width: 1260px;
       margin: 0 auto;
       padding: 12px 20px;
       display: flex;
@@ -168,7 +168,7 @@
     .brand-logo {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       text-decoration: none;
       transition: transform 0.2s ease;
       user-select: none;
@@ -177,17 +177,17 @@
       transform: translateY(-1px);
     }
     .brand-badge {
-      width: 40px;
-      height: 40px;
-      min-width: 40px;
-      border-radius: 10px;
+      width: 50px;
+      height: 50px;
+      min-width: 50px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
       background: #0c2055;
-      transition: box-shadow 0.2s ease;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
     .brand-badge-img {
       width: 100%;
@@ -198,8 +198,8 @@
       image-rendering: crisp-edges;
     }
     body.dark-mode .brand-badge {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
     .brand-text-col {
       display: flex;
@@ -208,9 +208,9 @@
       line-height: 1.15;
     }
     .brand-title {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.4px;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
       font-family: var(--font-main);
       display: flex;
       align-items: center;
@@ -226,12 +226,12 @@
       color: #ffffff;
     }
     .brand-tagline {
-      font-size: 9px;
+      font-size: 10.5px;
       font-weight: 800;
-      letter-spacing: 0.9px;
+      letter-spacing: 1px;
       text-transform: uppercase;
       color: #15803d;
-      margin-top: 2px;
+      margin-top: 3px;
       font-family: var(--font-main);
       transition: color 0.2s ease;
     }
@@ -240,35 +240,35 @@
     }
     @media (max-width: 480px) {
       .brand-title {
-        font-size: 19px;
+        font-size: 21px;
       }
       .brand-tagline {
-        font-size: 8px;
-        letter-spacing: 0.7px;
+        font-size: 9px;
+        letter-spacing: 0.8px;
       }
       .brand-badge {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
       }
     }
     .header-nav {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       flex-wrap: wrap;
     }
     .nav-btn {
-      padding: 7px 13px;
-      font-size: 13px;
+      padding: 8px 15px;
+      font-size: 14.5px;
       font-weight: 700;
-      border-radius: 8px;
+      border-radius: 9px;
       background: var(--surface-hover);
       color: var(--text-muted);
       transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
     }
     .nav-btn:hover, .nav-btn.active {
       background: var(--brand);
@@ -284,10 +284,10 @@
       background: var(--surface-hover);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 7px 12px;
-      font-size: 13px;
+      padding: 8px 14px;
+      font-size: 14px;
       font-weight: 600;
-      border-radius: 8px;
+      border-radius: 9px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -705,32 +705,37 @@
       box-shadow: var(--shadow-sm);
     }
     .content-title {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 900;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 14px;
+      margin-bottom: 18px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 16px;
       color: var(--brand);
       line-height: 1.35;
     }
     .content-body-area {
-      font-size: 15.5px;
+      font-size: 16px;
       line-height: 1.8;
       color: var(--text);
     }
     .content-body-area table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      border-radius: 8px;
-      overflow: hidden;
+      width: 100% !important;
+      border-collapse: collapse !important;
+      margin: 24px 0 !important;
+      border: 1.5px solid #cbd5e1 !important;
+      border-radius: 10px !important;
+      overflow: hidden !important;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+      table-layout: auto !important;
     }
     .content-body-area th, .content-body-area td {
-      border: 1px solid var(--border);
-      padding: 11px 14px;
+      border: 1px solid #cbd5e1 !important;
+      padding: 13px 18px !important;
+      vertical-align: middle !important;
     }
-    /* Table Headers & Quick Overview Card High-Contrast Fix */
+    /* Table Headers & Category Overview Styling (Image 2 & 4) */
     .content-body-area table thead tr,
+    .content-body-area table tr:first-child th,
     .content-body-area table tr[style*="color: #ffffff"],
     .content-body-area table tr[style*="color:#ffffff"] {
       background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
@@ -740,31 +745,249 @@
       background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
       color: #ffffff !important;
       font-weight: 800 !important;
-      font-size: 15.5px !important;
-      padding: 12px 16px !important;
-      border: 1px solid #1d4ed8 !important;
+      font-size: 16px !important;
+      padding: 13px 18px !important;
+      border: 1px solid #3b82f6 !important;
       letter-spacing: 0.2px;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
-    }
-    body.dark-mode .content-body-area table th {
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
-      border-color: #3b82f6 !important;
-      color: #ffffff !important;
+      text-align: left;
+      vertical-align: middle !important;
     }
     .content-body-area table td {
-      color: var(--text);
-      background: var(--surface);
+      border: 1px solid #cbd5e1 !important;
+      padding: 13px 18px !important;
+      font-size: 15px !important;
+      font-weight: 500 !important;
+      color: var(--text) !important;
+      background: var(--surface) !important;
+      vertical-align: middle !important;
+      line-height: 1.6 !important;
+    }
+    .content-body-area table td:first-child {
+      font-weight: 600 !important;
+    }
+    .content-body-area table tr:nth-child(even) td {
+      background: var(--surface-hover) !important;
     }
     .content-body-area table td[style*="background: #f8fafc"],
     .content-body-area table td[style*="background:#f8fafc"] {
       background: var(--surface-hover) !important;
       color: var(--text) !important;
     }
+    /* If a table has a title banner row spanning multiple columns */
+    .content-body-area table tr:first-child td[colspan],
+    .content-body-area table tr:first-child th[colspan] {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      font-size: 16.5px !important;
+      padding: 14px 18px !important;
+      text-align: left !important;
+    }
+    body.dark-mode .content-body-area table {
+      border-color: #334155 !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    }
+    body.dark-mode .content-body-area table th {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+      border-color: #3b82f6 !important;
+      color: #ffffff !important;
+    }
+    body.dark-mode .content-body-area table td {
+      color: #f1f5f9 !important;
+      background: #0f172a !important;
+      border-color: #334155 !important;
+    }
+    body.dark-mode .content-body-area table tr:nth-child(even) td {
+      background: #1e293b !important;
+    }
     body.dark-mode .content-body-area div[style*="background: #ffffff"],
     body.dark-mode .content-body-area div[style*="background:#ffffff"] {
       background: transparent !important;
       color: var(--text) !important;
     }
+
+    /* Headings inside post body */
+    .content-body-area h1 {
+      font-size: 24px !important;
+      font-weight: 800 !important;
+      color: var(--text) !important;
+      line-height: 1.4 !important;
+      margin: 22px 0 14px 0 !important;
+    }
+    .content-body-area h2 {
+      font-size: 20px !important;
+      font-weight: 800 !important;
+      color: var(--text) !important;
+      margin: 28px 0 14px 0 !important;
+      padding-bottom: 10px !important;
+      border-bottom: 2px solid var(--border) !important;
+      line-height: 1.35 !important;
+    }
+    .content-body-area h3 {
+      font-size: 17.5px !important;
+      font-weight: 700 !important;
+      color: var(--text) !important;
+      margin-bottom: 10px !important;
+    }
+
+    /* Post Lists: Step-by-Step Instructions & Guidelines (Image 3) */
+    .content-body-area ol {
+      padding-left: 26px !important;
+      margin: 18px 0 !important;
+      font-size: 16px !important;
+      line-height: 1.85 !important;
+      color: var(--text) !important;
+    }
+    .content-body-area ol li {
+      font-size: 16px !important;
+      line-height: 1.85 !important;
+      margin-bottom: 12px !important;
+      color: var(--text) !important;
+    }
+    .content-body-area ul {
+      padding-left: 24px !important;
+      margin: 16px 0 !important;
+      font-size: 15.5px !important;
+      line-height: 1.8 !important;
+    }
+    .content-body-area ul li {
+      font-size: 15.5px !important;
+      line-height: 1.8 !important;
+      margin-bottom: 10px !important;
+    }
+
+    /* Expert Preparation & Guidelines Callout Box (Image 3) */
+    .content-body-area div[style*="background: #f0fdf4"],
+    .content-body-area div[style*="background:#f0fdf4"] {
+      background: #f0fdf4 !important;
+      border: 1.5px solid #86efac !important;
+      border-left: 6px solid #16a34a !important;
+      border-radius: 12px !important;
+      padding: 20px 24px !important;
+      margin: 24px 0 !important;
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.08) !important;
+    }
+    .content-body-area div[style*="background: #f0fdf4"] h3,
+    .content-body-area div[style*="background:#f0fdf4"] h3 {
+      font-size: 18px !important;
+      font-weight: 800 !important;
+      color: #15803d !important;
+      margin-bottom: 12px !important;
+    }
+    .content-body-area div[style*="background: #f0fdf4"] li,
+    .content-body-area div[style*="background:#f0fdf4"] li {
+      font-size: 15px !important;
+      line-height: 1.8 !important;
+      color: #166534 !important;
+      margin-bottom: 10px !important;
+    }
+    body.dark-mode .content-body-area div[style*="background: #f0fdf4"],
+    body.dark-mode .content-body-area div[style*="background:#f0fdf4"] {
+      background: rgba(22, 163, 74, 0.12) !important;
+      border-color: rgba(34, 197, 94, 0.3) !important;
+      border-left-color: #22c55e !important;
+    }
+    body.dark-mode .content-body-area div[style*="background: #f0fdf4"] h3,
+    body.dark-mode .content-body-area div[style*="background:#f0fdf4"] h3 {
+      color: #4ade80 !important;
+    }
+    body.dark-mode .content-body-area div[style*="background: #f0fdf4"] li,
+    body.dark-mode .content-body-area div[style*="background:#f0fdf4"] li {
+      color: #bbf7d0 !important;
+    }
+
+    /* FAQ Section Items (Image 3) */
+    .content-body-area div[style*="background: #f8fafc; border: 1px solid #e2e8f0"],
+    .content-body-area div[style*="background:#f8fafc; border:1px solid #e2e8f0"],
+    .content-body-area .faq-item {
+      background: var(--surface) !important;
+      border: 1.5px solid var(--border) !important;
+      border-radius: 10px !important;
+      padding: 16px 20px !important;
+      margin-bottom: 14px !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+    }
+    .content-body-area div[style*="background: #f8fafc; border: 1px solid #e2e8f0"] strong,
+    .content-body-area div[style*="background:#f8fafc; border:1px solid #e2e8f0"] strong {
+      font-size: 16.5px !important;
+      font-weight: 800 !important;
+      color: var(--text) !important;
+      display: block !important;
+      margin-bottom: 8px !important;
+    }
+    .content-body-area div[style*="background: #f8fafc; border: 1px solid #e2e8f0"] span,
+    .content-body-area div[style*="background:#f8fafc; border:1px solid #e2e8f0"] span {
+      font-size: 15px !important;
+      line-height: 1.7 !important;
+      color: var(--text-muted) !important;
+      display: block !important;
+    }
+
+    /* Direct Action Link Buttons (Image 4) */
+    .content-body-area table a[style*="Click Here"],
+    .content-body-area table a[style*="padding: 8px 18px"],
+    .content-body-area table a[style*="padding:8px 18px"] {
+      font-size: 14.5px !important;
+      font-weight: 800 !important;
+      padding: 10px 22px !important;
+      border-radius: 8px !important;
+      letter-spacing: 0.3px !important;
+      text-decoration: none !important;
+      display: inline-block !important;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15) !important;
+      transition: transform 0.2s, box-shadow 0.2s !important;
+    }
+    .content-body-area table a[style*="Click Here"]:hover,
+    .content-body-area table a[style*="padding: 8px 18px"]:hover,
+    .content-body-area table a[style*="padding:8px 18px"]:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22) !important;
+    }
+
+    /* Editorial Disclaimer & Attribution Box - HIGH-VISIBILITY HIGHLIGHT (Image 4) */
+    .content-body-area div[style*="Editorial Disclaimer"],
+    .content-body-area div[style*="editorial disclaimer"],
+    .content-body-area .editorial-disclaimer-highlight,
+    .editorial-disclaimer-box {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+      border: 2px solid #f59e0b !important;
+      border-left: 8px solid #d97706 !important;
+      border-radius: 12px !important;
+      padding: 20px 24px !important;
+      font-size: 15px !important;
+      line-height: 1.8 !important;
+      color: #78350f !important;
+      margin-top: 36px !important;
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15) !important;
+    }
+    .content-body-area div[style*="Editorial Disclaimer"] strong,
+    .content-body-area div[style*="editorial disclaimer"] strong,
+    .content-body-area .editorial-disclaimer-highlight strong,
+    .editorial-disclaimer-box strong {
+      color: #92400e !important;
+      font-size: 16.5px !important;
+      font-weight: 900 !important;
+      display: inline-block !important;
+      margin-bottom: 6px !important;
+    }
+    body.dark-mode .content-body-area div[style*="Editorial Disclaimer"],
+    body.dark-mode .content-body-area div[style*="editorial disclaimer"],
+    body.dark-mode .content-body-area .editorial-disclaimer-highlight,
+    body.dark-mode .editorial-disclaimer-box {
+      background: linear-gradient(135deg, #1c1917 0%, #292524 100%) !important;
+      border: 2px solid #d97706 !important;
+      border-left: 8px solid #f59e0b !important;
+      color: #fde68a !important;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6) !important;
+    }
+    body.dark-mode .content-body-area div[style*="Editorial Disclaimer"] strong,
+    body.dark-mode .content-body-area div[style*="editorial disclaimer"] strong,
+    body.dark-mode .content-body-area .editorial-disclaimer-highlight strong,
+    body.dark-mode .editorial-disclaimer-box strong {
+      color: #fbbf24 !important;
+    }
+
     /* Prevent duplicate title if post body already includes an h1 heading */
     .content-body-area > div > h1:first-child,
     .content-body-area > h1:first-child {
@@ -1144,7 +1367,7 @@
     <div class='header-inner'>
       <a class='brand-logo' href='/' title='Rojgaar Result &#8212; Government Job Portal'>
         <div class='brand-badge'>
-          <img alt='Rojgaar Result Icon' class='brand-badge-img' height='40' src='https://files.catbox.moe/33u2vm.png' width='40'/>
+          <img alt='Rojgaar Result Icon' class='brand-badge-img' height='50' src='https://files.catbox.moe/33u2vm.png' width='50'/>
         </div>
         <div class='brand-text-col'>
           <div class='brand-title'>

@@ -306,16 +306,16 @@ def parse_full_job_page(url, post_title):
                 for c in cells:
                     tag = 'th' if is_th else 'td'
                     cell_text = sanitize_brand_text(c.get_text())
-                    style = "padding:9px 12px; border:1px solid #cbd5e1; font-size:13px;"
+                    style = "padding:12px 14px; border:1px solid #cbd5e1; font-size:15px; vertical-align:middle;"
                     if is_th:
-                        style += " background:#0f172a; color:#ffffff; font-weight:bold; text-align:left;"
+                        style += " background:linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color:#ffffff; font-weight:bold; text-align:left;"
                     else:
                         style += " background:#ffffff; color:#1e293b;"
                     r_str += f"<{tag} style='{style}'>{safe_escape(cell_text)}</{tag}>"
                 r_str += "</tr>"
                 rows_html.append(r_str)
             if len(rows_html) > 1:
-                tbl_html = f"<div style='overflow-x:auto; margin:15px 0;'><table style='width:100%; border-collapse:collapse; border:1px solid #cbd5e1;'>{''.join(rows_html)}</table></div>"
+                tbl_html = f"<div style='overflow-x:auto; margin:20px 0;'><table style='width:100%; border-collapse:collapse; border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden;'>{''.join(rows_html)}</table></div>"
                 data["vacancy_tables"].append(tbl_html)
 
     return data
@@ -753,13 +753,13 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
             "Solve official previous years' question papers and mock tests regularly to enhance speed and reduce negative marking."
         ]
 
-    steps_html = "".join([f"<li style='margin-bottom:8px;'>{safe_escape(st)}</li>" for st in guide_steps])
+    steps_html = "".join([f"<li style='margin-bottom:10px;'>{safe_escape(st)}</li>" for st in guide_steps])
     how_to_section = f"""
     <div style="margin: 24px 0;">
-      <h2 style="color: #0f172a; font-size: 18px; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px;">
+      <h2 style="color: #0f172a; font-size: 19px; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px;">
         📝 Step-by-Step Instructions &amp; Procedure
       </h2>
-      <ol style="padding-left: 20px; font-size: 14px; line-height: 1.7; color: #334155;">
+      <ol style="padding-left: 24px; font-size: 15.5px; line-height: 1.8; color: #1e293b;">
         {steps_html}
       </ol>
     </div>
@@ -767,14 +767,14 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
 
     # 8. Unique Value-Added Exam Preparation Tips (AdSense Quality Booster)
     prep_tips = f"""
-    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 16px; margin: 24px 0;">
-      <h3 style="margin-top: 0; color: #15803d; font-size: 16px; font-weight: 700; margin-bottom: 8px;">
+    <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-left: 6px solid #16a34a; border-radius: 10px; padding: 18px 22px; margin: 24px 0;">
+      <h3 style="margin-top: 0; color: #15803d; font-size: 17.5px; font-weight: 700; margin-bottom: 10px;">
         💡 Expert Preparation &amp; Application Guidelines
       </h3>
-      <ul style="padding-left: 20px; margin: 0; font-size: 13.5px; line-height: 1.7; color: #166534;">
-        <li><strong>Verify Eligibility First:</strong> Double-check educational degrees, age limits, and reservation documents against official norms before paying the application fee.</li>
-        <li><strong>Document Dimensions:</strong> Ensure photo and signature scans match the prescribed pixel resolution and file size (usually between 20 KB to 50 KB in JPG format).</li>
-        <li><strong>Negative Marking Awareness:</strong> Review the marking pattern carefully; avoid blind guessing on questions with 1/3rd or 1/4th negative mark penalties.</li>
+      <ul style="padding-left: 20px; margin: 0; font-size: 15px; line-height: 1.8; color: #166534;">
+        <li style="margin-bottom: 8px;"><strong>Verify Eligibility First:</strong> Double-check educational degrees, age limits, and reservation documents against official norms before paying the application fee.</li>
+        <li style="margin-bottom: 8px;"><strong>Document Dimensions:</strong> Ensure photo and signature scans match the prescribed pixel resolution and file size (usually between 20 KB to 50 KB in JPG format).</li>
+        <li style="margin-bottom: 8px;"><strong>Negative Marking Awareness:</strong> Review the marking pattern carefully; avoid blind guessing on questions with 1/3rd or 1/4th negative mark penalties.</li>
         <li><strong>Official Communication:</strong> Keep your registered email address and mobile phone active to receive SMS alerts regarding exam dates, admit cards, and results.</li>
       </ul>
     </div>
@@ -791,15 +791,15 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
     faq_items = ""
     for fq in faqs:
         faq_items += f"""
-        <div style="margin-bottom: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
-          <strong style="color: #0f172a; font-size: 14px; display: block; margin-bottom: 4px;">Q: {safe_escape(fq['q'])}</strong>
-          <span style="color: #475569; font-size: 13.5px; line-height: 1.5; display: block;">Ans: {safe_escape(fq['a'])}</span>
+        <div style="margin-bottom: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
+          <strong style="color: #0f172a; font-size: 16px; display: block; margin-bottom: 6px;">Q: {safe_escape(fq['q'])}</strong>
+          <span style="color: #334155; font-size: 15px; line-height: 1.65; display: block;">Ans: {safe_escape(fq['a'])}</span>
         </div>
         """
 
     faq_section = f"""
     <div style="margin: 24px 0;">
-      <h2 style="color: #0f172a; font-size: 18px; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 14px;">
+      <h2 style="color: #0f172a; font-size: 19px; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 14px;">
         ❓ Frequently Asked Questions (FAQs)
       </h2>
       {faq_items}
@@ -826,11 +826,11 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
 
         link_rows += f"""
         <tr>
-          <td style="padding: 12px 14px; border: 1px solid #cbd5e1; font-weight: 600; color: #1e293b; font-size: 14px;">
+          <td style="padding: 13px 16px; border: 1px solid #cbd5e1; font-weight: 600; color: #1e293b; font-size: 15px;">
             {safe_escape(lk['label'])}
           </td>
-          <td style="padding: 12px 14px; border: 1px solid #cbd5e1; text-align: center;">
-            <a href="{lk['url']}" target="_blank" rel="noopener noreferrer" style="background: {btn_bg}; color: #ffffff; padding: 8px 18px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-block; font-size: 13.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <td style="padding: 13px 16px; border: 1px solid #cbd5e1; text-align: center;">
+            <a href="{lk['url']}" target="_blank" rel="noopener noreferrer" style="background: {btn_bg}; color: #ffffff; padding: 10px 22px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-block; font-size: 14.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.12);">
               Click Here
             </a>
           </td>
@@ -840,10 +840,10 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
     if not link_rows:
         link_rows = f"""
         <tr>
-          <td style="padding: 12px 14px; border: 1px solid #cbd5e1; font-weight: 600; color: #1e293b; font-size: 14px;">
+          <td style="padding: 13px 16px; border: 1px solid #cbd5e1; font-weight: 600; color: #1e293b; font-size: 15px;">
             Official Portal / Circular Notice
           </td>
-          <td style="padding: 12px 14px; border: 1px solid #cbd5e1; text-align: center; color: #64748b; font-size: 13px;">
+          <td style="padding: 13px 16px; border: 1px solid #cbd5e1; text-align: center; color: #64748b; font-size: 14px;">
             Check Official Circular
           </td>
         </tr>
@@ -855,11 +855,11 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
         🔗 Official Direct Action Links
       </h2>
       <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; background: #ffffff;">
+        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
           <thead>
-            <tr style="background: #0f172a; color: #ffffff;">
-              <th style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: left; font-size: 14px;">Document / Direct Action</th>
-              <th style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-size: 14px; width: 140px;">Direct Link</th>
+            <tr style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: #ffffff;">
+              <th style="padding: 12px 16px; border: 1px solid #cbd5e1; text-align: left; font-size: 15.5px; font-weight: 700;">Document / Direct Action</th>
+              <th style="padding: 12px 16px; border: 1px solid #cbd5e1; text-align: center; font-size: 15.5px; font-weight: 700; width: 160px;">Direct Link</th>
             </tr>
           </thead>
           <tbody>
@@ -872,8 +872,8 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
 
     # 11. Legally Sound Editorial Disclaimer
     disclaimer = f"""
-    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px; font-size: 12px; color: #64748b; line-height: 1.6; margin-top: 30px; border-radius: 6px;">
-      <strong>Editorial Disclaimer &amp; Attribution:</strong> <em>{SITE_BRAND_NAME}</em> (rojgaarresult.com) is an educational career and recruitment news portal. We are an independent platform and not associated with any government department or ministry. All factual dates, notification data, and circulars are referenced directly from public recruitment gazettes released by {safe_escape(authority)}. Candidates must verify all information on the official departmental portal before submitting fees or applications.
+    <div class="editorial-disclaimer-box editorial-disclaimer-highlight" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 2px solid #f59e0b; border-left: 8px solid #d97706; padding: 20px 24px; font-size: 15px; color: #78350f; line-height: 1.8; margin-top: 36px; border-radius: 12px; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15);">
+      <strong style="color: #92400e; font-size: 16.5px; font-weight: 900; display: inline-block; margin-bottom: 6px;">🛡️ Editorial Disclaimer &amp; Attribution:</strong> <em>{SITE_BRAND_NAME}</em> (rojgaarresult.com) is an educational career and recruitment news portal. We are an independent platform and not associated with any government department or ministry. All factual dates, notification data, and circulars are referenced directly from public recruitment gazettes released by {safe_escape(authority)}. Candidates must verify all information on the official departmental portal before submitting fees or applications.
     </div>
     """
 
