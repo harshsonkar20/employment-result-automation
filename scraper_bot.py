@@ -3,9 +3,12 @@ import re
 import html
 import json
 import time
+import io
+import base64
 import requests
 from bs4 import BeautifulSoup
 import urllib3
+from PIL import Image, ImageDraw, ImageFont
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
@@ -16,7 +19,8 @@ CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
 CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
 REFRESH_TOKEN = os.environ.get("GOOGLE_REFRESH_TOKEN", "").strip()
 
-SITE_BRAND_NAME = "EMPLOYMENT RESULT"
+SITE_BRAND_NAME = "ROJGAAR RESULT"
+SITE_DOMAIN = "rojgaarresult.com"
 CACHE_FILE = "published_cache.json"
 
 SESSION = requests.Session()
@@ -311,6 +315,231 @@ def parse_full_job_page(url, post_title):
 
     return data
 
+# ==================== DYNAMIC RECRUITMENT BANNER GENERATOR ====================
+
+def get_font(size, bold=False):
+    candidate_paths = []
+    if bold:
+        candidate_paths.extend([
+            "arialbd.ttf",
+            "C:/Windows/Fonts/arialbd.ttf",
+            "C:/Windows/Fonts/segoeuib.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+        ])
+    candidate_paths.extend([
+        "arial.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+    ])
+    for p in candidate_paths:
+        try:
+            return ImageFont.truetype(p, size)
+        except Exception:
+            continue
+    try:
+        return ImageFont.load_default(size=size)
+    except Exception:
+        return ImageFont.load_default()
+
+def draw_checkmark(draw, x, y, size=18, color=(16, 185, 129)):
+    p1 = (x, y + size * 0.55)
+    p2 = (x + size * 0.35, y + size * 0.9)
+    p3 = (x + size * 0.95, y + size * 0.15)
+    draw.line([p1, p2], fill=color, width=3)
+    draw.line([p2, p3], fill=color, width=3)
+
+def create_recruitment_banner(title, category_name="Latest Jobs", authority_name=""):
+    w, h = 1200, 630
+    img = Image.new("RGB", (w, h), color=(10, 15, 26))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Sleek Gradient: Obsidian Navy (#0a0f1a) to Deep Slate (#1e293b)
+    for y in range(h):
+        r = int(10 + (28 - 10) * (y / h))
+        g = int(15 + (41 - 15) * (y / h))
+        b = int(26 + (65 - 26) * (y / h))
+        draw.line([(0, y), (w, y)], fill=(r, g, b))
+
+    # Subtle ambient lighting glow on top-right
+    for rad in range(350, 0, -5):
+        alpha = int((1 - rad / 350) * 18)
+        color = (30 + alpha, 45 + alpha * 2, 80 + alpha * 3)
+        draw.ellipse([(w - 200 - rad, -100 - rad), (w - 200 + rad, -100 + rad)], outline=color, width=4)
+
+    # Category Color Theme & Badges
+    cat_colors = {
+        "Latest Jobs": {"accent": (16, 185, 129), "badge_bg": (6, 78, 59), "cta": "APPLY ONLINE >>"},
+        "Admit Card": {"accent": (59, 130, 246), "badge_bg": (30, 58, 138), "cta": "DOWNLOAD ADMIT CARD >>"},
+        "Result": {"accent": (239, 68, 68), "badge_bg": (127, 29, 29), "cta": "CHECK RESULT / CUTOFF >>"},
+        "Answer Key": {"accent": (168, 85, 247), "badge_bg": (88, 28, 135), "cta": "VIEW ANSWER KEY >>"},
+        "Syllabus": {"accent": (249, 115, 22), "badge_bg": (124, 45, 18), "cta": "DOWNLOAD SYLLABUS PDF >>"}
+    }
+    theme = cat_colors.get(category_name, cat_colors["Latest Jobs"])
+    accent = theme["accent"]
+    badge_bg = theme["badge_bg"]
+    cta_text = theme["cta"]
+
+    # Top Category Color Banner
+    draw.rectangle([(0, 0), (w, 10)], fill=accent)
+
+    # Outer Glassmorphic Border Frame
+    draw.rounded_rectangle([(32, 28), (w - 32, h - 28)], radius=20, outline=(51, 65, 85), width=2)
+    draw.rounded_rectangle([(35, 31), (w - 35, h - 31)], radius=18, outline=(25, 36, 56), width=1)
+
+    # --- TOP ROW: EMBEDDED OFFICIAL LOGO (Left) + CATEGORY PILL (Right) ---
+    logo_path = os.path.join(os.path.dirname(__file__), "assets", "logo_pill.png")
+    if os.path.exists(logo_path):
+        try:
+            logo_pill = Image.open(logo_path).convert("RGBA")
+            target_h = 64
+            aspect = logo_pill.width / logo_pill.height
+            target_w = int(target_h * aspect)
+            logo_resized = logo_pill.resize((target_w, target_h), Image.LANCZOS)
+            img.paste(logo_resized, (65, 42), logo_resized)
+        except Exception:
+            draw.ellipse([(65, 58), (79, 72)], fill=(34, 197, 94))
+            font_brand = get_font(24, bold=True)
+            draw.text((90, 52), SITE_BRAND_NAME, fill=(255, 255, 255), font=font_brand)
+    else:
+        draw.ellipse([(65, 58), (79, 72)], fill=(34, 197, 94))
+        font_brand = get_font(24, bold=True)
+        draw.text((90, 52), SITE_BRAND_NAME, fill=(255, 255, 255), font=font_brand)
+
+    # Live Badge next to logo
+    draw.ellipse([(285, 54), (297, 66)], fill=(34, 197, 94))
+    font_live = get_font(13, bold=True)
+    draw.text((305, 53), "OFFICIAL 2026 RECRUITMENT", fill=(147, 197, 253), font=font_live)
+    font_portal = get_font(12, bold=False)
+    draw.text((305, 71), "FASTEST VERIFIED GOVT JOB ALERTS", fill=(148, 163, 184), font=font_portal)
+
+    # Category Pill
+    font_badge = get_font(17, bold=True)
+    cat_label = category_name.upper()
+    cat_bbox = draw.textbbox((0, 0), cat_label, font=font_badge)
+    cat_text_w = cat_bbox[2] - cat_bbox[0]
+    pill_w = cat_text_w + 38
+    pill_x1 = w - 65 - pill_w
+    draw.rounded_rectangle([(pill_x1, 48), (w - 65, 92)], radius=10, fill=badge_bg, outline=accent, width=2)
+    draw.text((pill_x1 + 19, 59), cat_label, fill=(255, 255, 255), font=font_badge)
+
+    # Separator Line
+    draw.line([(65, 120), (w - 65, 120)], fill=(51, 65, 85), width=1)
+
+    # --- ROW 2: AUTHORITY BADGE ---
+    auth = authority_name if authority_name else "EXAM CONDUCTING AUTHORITY"
+    font_auth = get_font(19, bold=True)
+    auth_text = auth.upper()
+    bbox_auth = draw.textbbox((0, 0), auth_text, font=font_auth)
+    auth_box_w = min(bbox_auth[2] - bbox_auth[0] + 32, w - 130)
+    draw.rounded_rectangle([(65, 138), (65 + auth_box_w, 178)], radius=8, fill=(15, 23, 42), outline=(59, 130, 246), width=1)
+    draw.text((81, 146), auth_text, fill=(147, 197, 253), font=font_auth)
+
+    # --- ROW 3: MAIN POST TITLE (Auto Wrapped) ---
+    font_title = get_font(38, bold=True)
+    words = title.split()
+    lines = []
+    cur = ""
+    for word in words:
+        test = (cur + " " + word).strip()
+        bbox = draw.textbbox((0, 0), test, font=font_title)
+        if (bbox[2] - bbox[0]) < (w - 150):
+            cur = test
+        else:
+            if cur:
+                lines.append(cur)
+            cur = word
+    if cur:
+        lines.append(cur)
+    lines = lines[:3]
+
+    y_t = 205
+    for ln in lines:
+        draw.text((67, y_t + 2), ln, fill=(0, 0, 0), font=font_title)
+        draw.text((65, y_t), ln, fill=(255, 255, 255), font=font_title)
+        y_t += 54
+
+    # --- ROW 4: 3 FEATURE PILLS ---
+    font_pill = get_font(17, bold=True)
+    pills = ["Official Notification", "100% Online Portal", "Verified Govt Update"]
+    px = 65
+    py = max(y_t + 26, 405)
+    for p_txt in pills:
+        draw.rounded_rectangle([(px, py), (px + 235, py + 46)], radius=10, fill=(15, 23, 42), outline=(51, 65, 85), width=1)
+        draw_checkmark(draw, px + 15, py + 13, size=18, color=accent)
+        draw.text((px + 45, py + 13), p_txt, fill=(226, 232, 240), font=font_pill)
+        px += 250
+
+    # --- ROW 5: FOOTER & CALL TO ACTION ---
+    b_top = h - 96
+    draw.line([(65, b_top), (w - 65, b_top)], fill=(51, 65, 85), width=1)
+
+    font_foot = get_font(16, bold=False)
+    draw.text((65, b_top + 28), "rojgaarresult.com  |  Fastest Verified Government Updates", fill=(148, 163, 184), font=font_foot)
+
+    font_cta = get_font(18, bold=True)
+    cta_bbox = draw.textbbox((0, 0), cta_text, font=font_cta)
+    btn_w = cta_bbox[2] - cta_bbox[0] + 46
+    btn_x = w - 65 - btn_w
+    draw.rounded_rectangle([(btn_x, b_top + 16), (w - 65, b_top + 62)], radius=10, fill=accent)
+    draw.text((btn_x + 23, b_top + 26), cta_text, fill=(255, 255, 255), font=font_cta)
+
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=90, optimize=True)
+    return buf.getvalue()
+
+def upload_banner_image(image_bytes, filename="job_banner.jpg"):
+    """
+    Uploads the generated banner to permanent high-speed CDN.
+    Tier 1: Catbox.moe (Direct HTTPS link, permanent, fast)
+    Tier 2: Freeimage.host (Direct permanent image hosting)
+    Tier 3: Base64 data URI fallback
+    """
+    # Tier 1: Catbox.moe
+    try:
+        r = requests.post(
+            "https://catbox.moe/user/api.php",
+            data={"reqtype": "fileupload"},
+            files={"fileToUpload": (filename, image_bytes, "image/jpeg")},
+            timeout=12
+        )
+        if r.status_code == 200 and r.text.strip().startswith("http"):
+            url = r.text.strip()
+            print(f"  [OK] Banner uploaded to Catbox: {url}")
+            return url
+    except Exception as e:
+        print(f"  [Notice] Catbox upload: {e}")
+
+    # Tier 2: Freeimage.host
+    try:
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        r = requests.post(
+            "https://freeimage.host/api/1/upload",
+            data={
+                "key": "6d207e02198a847aa98d0a2a901485a5",
+                "action": "upload",
+                "source": b64,
+                "format": "json"
+            },
+            timeout=12
+        )
+        if r.status_code == 200:
+            res = r.json()
+            url = res.get("image", {}).get("url")
+            if url:
+                print(f"  [OK] Banner uploaded to Freeimage: {url}")
+                return url
+    except Exception as e:
+        print(f"  [Notice] Freeimage upload: {e}")
+
+    # Tier 3: Base64 data URI fallback
+    b64 = base64.b64encode(image_bytes).decode("utf-8")
+    return f"data:image/jpeg;base64,{b64}"
+
 # ==================== 100% ORIGINAL, EDITORIAL HTML BUILDER ====================
 
 def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
@@ -322,6 +551,32 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
     clean_title = safe_escape(title)
     authority = extract_authority_name(title)
     post_name = extract_post_name(title)
+
+    # 0. Auto-Generate & Upload High-Impact Recruitment Banner (1200x630 Social Card)
+    safe_name = re.sub(r'[^a-zA-Z0-9]+', '_', title.lower()).strip('_') + ".jpg"
+    banner_url = ""
+    try:
+        img_bytes = create_recruitment_banner(title, category_name, authority)
+        # Save locally in banners/ folder for repo archiving
+        try:
+            os.makedirs("banners", exist_ok=True)
+            local_path = os.path.join("banners", safe_name)
+            with open(local_path, "wb") as f_img:
+                f_img.write(img_bytes)
+        except Exception:
+            pass
+
+        banner_url = upload_banner_image(img_bytes, safe_name)
+    except Exception as e:
+        print(f"  [Banner Notice] Error generating banner: {e}")
+
+    banner_section = ""
+    if banner_url:
+        banner_section = f"""
+        <div class="post-featured-banner" style="margin: 16px auto 24px auto; text-align: center; max-width: 100%;">
+          <img src="{banner_url}" alt="{clean_title}" width="1200" height="630" style="width: 100%; max-width: 900px; height: auto; border-radius: 12px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12); display: block; margin: 0 auto; object-fit: cover;" />
+        </div>
+        """
 
     # 1. Original Journalistic Overview by Category
     if category_name == "Latest Jobs":
@@ -611,7 +866,7 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
     # 11. Legally Sound Editorial Disclaimer
     disclaimer = f"""
     <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px; font-size: 12px; color: #64748b; line-height: 1.6; margin-top: 30px; border-radius: 6px;">
-      <strong>Editorial Disclaimer &amp; Attribution:</strong> <em>{SITE_BRAND_NAME}</em> (employmentresultin.blogspot.com) is an educational career and recruitment news portal. We are an independent platform and not associated with any government department or ministry. All factual dates, notification data, and circulars are referenced directly from public recruitment gazettes released by {safe_escape(authority)}. Candidates must verify all information on the official departmental portal before submitting fees or applications.
+      <strong>Editorial Disclaimer &amp; Attribution:</strong> <em>{SITE_BRAND_NAME}</em> (rojgaarresult.com) is an educational career and recruitment news portal. We are an independent platform and not associated with any government department or ministry. All factual dates, notification data, and circulars are referenced directly from public recruitment gazettes released by {safe_escape(authority)}. Candidates must verify all information on the official departmental portal before submitting fees or applications.
     </div>
     """
 
@@ -620,6 +875,7 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
       <h1 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 16px 0 12px 0; line-height: 1.4;">
         {clean_title}
       </h1>
+      {banner_section}
       <div style="background: #f8fafc; border-left: 4px solid {border_color}; padding: 14px 18px; margin-bottom: 20px; font-size: 14.5px; color: #334155; line-height: 1.7; border-radius: 0 6px 6px 0;">
         {overview}
       </div>
