@@ -51,8 +51,10 @@ def upgrade_and_clean_posts():
 
     print(f"Scanning {len(posts)} live Blogger posts...")
     reverted_old_count = 0
+    reverted_duplicate_count = 0
     updated_count = 0
     relabelled_syllabus_count = 0
+    seen_normalized_keys = set()
 
     for p in posts:
         post_id = p['id']
@@ -73,15 +75,28 @@ def upgrade_and_clean_posts():
             except Exception as e:
                 print(f"    ✖ Revert error: {e}")
 
-        # B. Check if post is a Syllabus item with wrong label
+        # B. Check for duplicate posts (keep only 1 unique live copy)
+        n_key = normalize_key(title)
+        if n_key in seen_normalized_keys:
+            print(f"--> [REVERTING DUPLICATE POST TO DRAFT] {title} (ID: {post_id})")
+            try:
+                service.posts().revert(blogId=BLOG_ID, postId=post_id).execute()
+                reverted_duplicate_count += 1
+                time.sleep(0.5)
+                continue
+            except Exception as e:
+                print(f"    ✖ Revert duplicate error: {e}")
+        else:
+            seen_normalized_keys.add(n_key)
+
+        # C. Check if post is a Syllabus item with wrong label
         if "syllabus" in title.lower() and "Syllabus" not in labels:
             print(f"--> [FIXING SYLLABUS LABEL] {title}")
             labels = ["Syllabus"]
             category_name = "Syllabus"
             relabelled_syllabus_count += 1
 
-        # C. Re-write all posts into 100% original, copyright-free, AdSense-approved format
-        n_key = normalize_key(title)
+        # D. Re-write all posts into 100% original, copyright-free, AdSense-approved format
         meta = title_to_meta.get(n_key)
 
         if meta:
@@ -144,6 +159,7 @@ def upgrade_and_clean_posts():
     print(f"\n==========================================")
     print(f"MAINTENANCE COMPLETED:")
     print(f" - Outdated/Historical posts reverted to draft: {reverted_old_count}")
+    print(f" - Duplicate posts reverted to draft: {reverted_duplicate_count}")
     print(f" - Posts rewritten into 100% unique AdSense content: {updated_count}")
     print(f" - Syllabus posts labelled: {relabelled_syllabus_count}")
     print(f" - Fresh Syllabus posts added: {published_syllabus}")

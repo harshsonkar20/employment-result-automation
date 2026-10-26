@@ -2214,10 +2214,15 @@
           });
 
           var primaryCat = 'Job';
-          if (cats.indexOf('answer key') > -1 || tl.indexOf('answer key') > -1) primaryCat = 'Answer Key';
-          else if (cats.indexOf('syllabus') > -1 || tl.indexOf('syllabus') > -1) primaryCat = 'Syllabus';
-          else if (cats.indexOf('result') > -1 || tl.indexOf('result') > -1) primaryCat = 'Result';
-          else if (cats.indexOf('admit card') > -1 || tl.indexOf('admit card') > -1 || tl.indexOf('exam date') > -1) primaryCat = 'Admit Card';
+          if (cats.indexOf('answer key') > -1) primaryCat = 'Answer Key';
+          else if (cats.indexOf('syllabus') > -1) primaryCat = 'Syllabus';
+          else if (cats.indexOf('result') > -1) primaryCat = 'Result';
+          else if (cats.indexOf('admit card') > -1) primaryCat = 'Admit Card';
+          else if (cats.indexOf('latest jobs') > -1 || cats.indexOf('job') > -1 || cats.indexOf('jobs') > -1) primaryCat = 'Job';
+          else if (tl.indexOf('answer key') > -1) primaryCat = 'Answer Key';
+          else if (tl.indexOf('syllabus') > -1) primaryCat = 'Syllabus';
+          else if (tl.indexOf('result') > -1) primaryCat = 'Result';
+          else if (tl.indexOf('admit card') > -1 || tl.indexOf('hall ticket') > -1) primaryCat = 'Admit Card';
 
           list.push({ title: title, link: link, cat: primaryCat, categories: cats });
         });
@@ -2236,17 +2241,71 @@
         var bJob = document.getElementById('badge-count-job');
         var bKey = document.getElementById('badge-count-key');
         var bSyl = document.getElementById('badge-count-syl');
-        if (bRes) bRes.innerText = counts.Result + ' Live';
-        if (bAdm) bAdm.innerText = counts['Admit Card'] + ' Live';
-        if (bJob) bJob.innerText = counts.Job + ' Live';
-        if (bKey) bKey.innerText = counts['Answer Key'] + ' Live';
-        if (bSyl) bSyl.innerText = counts.Syllabus + ' Live';
+        if (bRes && counts.Result > 0) bRes.innerText = counts.Result + ' Live';
+        if (bAdm && counts['Admit Card'] > 0) bAdm.innerText = counts['Admit Card'] + ' Live';
+        if (bJob && counts.Job > 0) bJob.innerText = counts.Job + ' Live';
+        if (bKey && counts['Answer Key'] > 0) bKey.innerText = counts['Answer Key'] + ' Live';
+        if (bSyl && counts.Syllabus > 0) bSyl.innerText = counts.Syllabus + ' Live';
+      }
+
+      // High-Speed Direct Category Feeds for the 5 Homepage Boxes
+      function loadHomepageCategoryBoxes(onDone) {
+        var catConfigs = [
+          { id: 'list-job', badgeId: 'badge-count-job', label: 'Latest Jobs', limit: 20 },
+          { id: 'list-admit', badgeId: 'badge-count-adm', label: 'Admit Card', limit: 20 },
+          { id: 'list-result', badgeId: 'badge-count-res', label: 'Result', limit: 20 },
+          { id: 'list-key', badgeId: 'badge-count-key', label: 'Answer Key', limit: 15 },
+          { id: 'list-syl', badgeId: 'badge-count-syl', label: 'Syllabus', limit: 15 }
+        ];
+
+        var promises = catConfigs.map(function(cfg) {
+          var url = '/feeds/posts/summary/-/' + encodeURIComponent(cfg.label) + '?alt=json&max-results=' + cfg.limit;
+          return fetch(url)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              var total = parseInt(data.feed && data.feed.openSearch$totalResults ? data.feed.openSearch$totalResults.$t : '0', 10);
+              var raw = (data.feed && data.feed.entry) ? data.feed.entry : [];
+              var parsed = parseFeedEntries(raw);
+
+              var bEl = document.getElementById(cfg.badgeId);
+              if (bEl && total > 0) bEl.innerText = total + ' Live';
+
+              var boxEl = document.getElementById(cfg.id);
+              if (boxEl && parsed.length > 0) {
+                var html = '';
+                parsed.forEach(function(p) {
+                  var badges = getSmartBadges(p.title);
+                  var safeTitle = p.title.replace(/'/g, "\\'");
+                  html += '<li>' + badges.org +
+                          '<a href="' + p.link + '">' + p.title + '</a>' +
+                          badges.urgency +
+                          '<button class="btn-item-share" onclick="shareToWhatsApp(\'' + safeTitle + '\', \'' + p.link + '\')" title="Share to WhatsApp">💬</button>' +
+                          '</li>';
+                });
+                boxEl.innerHTML = html;
+              }
+              return parsed;
+            })
+            .catch(function(e) {
+              return [];
+            });
+        });
+
+        Promise.all(promises).then(function(results) {
+          var merged = [];
+          results.forEach(function(arr) { merged = merged.concat(arr); });
+          if (merged.length > 0 && rawFeedEntries.length === 0) {
+            rawFeedEntries = merged;
+            globalAllPosts = merged;
+          }
+          if (onDone) onDone(merged);
+        });
       }
 
       // Progressive Multi-Batch Loader for ALL 400+ Posts
       function loadAllPostsProgressively(onFirstBatch, onProgress, onAllDone) {
-        var cached = getCache('sr_all_posts_v4');
-        if (cached && cached.length >= 350) {
+        var cached = getCache('sr_all_posts_v5');
+        if (cached && cached.length >= 250) {
           globalAllPosts = cached;
           rawFeedEntries = cached;
           if (onFirstBatch) onFirstBatch(cached);
@@ -2260,6 +2319,7 @@
           fetch('/feeds/posts/summary?alt=json&start-index=' + startIndex + '&max-results=100')
             .then(function(res) { return res.json(); })
             .then(function(data) {
+              var totalResults = parseInt(data.feed && data.feed.openSearch$totalResults ? data.feed.openSearch$totalResults.$t : '0', 10);
               var raw = (data.feed && data.feed.entry) ? data.feed.entry : [];
               var parsed = parseFeedEntries(raw);
               accumulated = accumulated.concat(parsed);
@@ -2274,16 +2334,16 @@
               }
               updateCategoryLiveCounts(accumulated);
 
-              if (raw.length >= 90) {
+              if (raw.length > 0 && (totalResults ? accumulated.length < totalResults : false)) {
                 fetchBatch(startIndex + raw.length);
               } else {
-                setCache('sr_all_posts_v4', accumulated);
+                setCache('sr_all_posts_v5', accumulated);
                 if (onAllDone) onAllDone(accumulated);
               }
             })
             .catch(function(err) {
               if (accumulated.length > 0) {
-                setCache('sr_all_posts_v4', accumulated);
+                setCache('sr_all_posts_v5', accumulated);
                 if (onAllDone) onAllDone(accumulated);
               }
             });
@@ -2533,16 +2593,17 @@
           fetch(labelUrl)
             .then(function(res) { return res.json(); })
             .then(function(data) {
+              var totalResults = parseInt(data.feed && data.feed.openSearch$totalResults ? data.feed.openSearch$totalResults.$t : '0', 10);
               var raw = (data.feed && data.feed.entry) ? data.feed.entry : [];
               var parsed = parseFeedEntries(raw);
               allFilteredPosts = allFilteredPosts.concat(parsed);
 
               if (catTitle) {
-                catTitle.innerText = catName + ' — ' + allFilteredPosts.length + ' Updates';
+                catTitle.innerText = catName + ' — ' + (totalResults || allFilteredPosts.length) + ' Updates';
               }
               renderArchivePage(currentArchivePage);
 
-              if (raw.length >= 90) {
+              if (raw.length > 0 && (totalResults ? allFilteredPosts.length < totalResults : false)) {
                 fetchCategoryBatches(startIndex + raw.length);
               } else {
                 if (catTitle) {
@@ -2579,8 +2640,8 @@
 
       // HOMEPAGE FEED LOADER (PROGRESSIVE MULTI-BATCH FOR ALL 400+ POSTS)
       if (currentPath === '' || currentPath === '/') {
-        var cachedEntries = getCache('sr_all_posts_v4');
-        if (cachedEntries && cachedEntries.length > 0) {
+        var cachedEntries = getCache('sr_all_posts_v5');
+        if (cachedEntries && cachedEntries.length >= 100) {
           globalAllPosts = cachedEntries;
           rawFeedEntries = cachedEntries;
           renderHomepageBoxes('ALL');
@@ -2588,18 +2649,20 @@
           setupLiveSearch();
         } else {
           injectSkeletons();
+          // Immediately populate all 5 homepage boxes directly from their category feeds
+          loadHomepageCategoryBoxes(function(merged) {
+            setupLiveSearch();
+          });
         }
 
         loadAllPostsProgressively(
           function onFirstBatch(firstBatch) {
-            renderHomepageBoxes('ALL');
             setupLiveSearch();
           },
           function onProgress(accumulated) {
             updateCategoryLiveCounts(accumulated);
           },
           function onAllDone(allPosts) {
-            renderHomepageBoxes('ALL');
             updateCategoryLiveCounts(allPosts);
             setupLiveSearch();
           }

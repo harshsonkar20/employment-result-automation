@@ -972,8 +972,20 @@ def run():
     print(f"Connecting to Blogger API (Blog ID: {BLOG_ID})...")
     service = get_blogger_service()
 
-    posts_res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=350).execute()
-    existing_titles = {normalize_key(p.get('title', '')) for p in posts_res.get('items', [])}
+    existing_titles = set()
+    page_token = None
+    try:
+        while True:
+            posts_res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=500, pageToken=page_token).execute()
+            for p in posts_res.get('items', []):
+                t = p.get('title', '')
+                if t:
+                    existing_titles.add(normalize_key(t))
+            page_token = posts_res.get('nextPageToken')
+            if not page_token:
+                break
+    except Exception as e:
+        print(f"Warning fetching existing posts: {e}")
     print(f"Loaded {len(existing_titles)} existing posts from Blogger.")
 
     published_cache = load_published_cache()
@@ -1000,13 +1012,16 @@ def run():
         # Publish in reverse order so the top item on Sarkari Result is published last (with the newest timestamp)
         # This guarantees it appears at the very top of Blogger!
         for title, link in reversed(items):
-            n_key = normalize_key(title)
-            if n_key in existing_titles:
-                continue
-
             publish_title = title
             if cat_name == "Syllabus" and "syllabus" not in publish_title.lower() and "exam pattern" not in publish_title.lower():
                 publish_title = f"{title} Syllabus & Exam Pattern"
+
+            n_key = normalize_key(title)
+            n_pub_key = normalize_key(publish_title)
+
+            # Skip if already published (URL cache OR title match)
+            if link in published_cache or n_key in existing_titles or n_pub_key in existing_titles:
+                continue
 
             print(f"Publishing 100% Original Post -> [{cat_name}] {publish_title}")
             parsed_data = parse_full_job_page(link, publish_title)
@@ -1026,6 +1041,7 @@ def run():
                 print(f"  ✔ Successfully Published to [{cat_name}]!")
                 published_cache.add(link)
                 existing_titles.add(n_key)
+                existing_titles.add(n_pub_key)
                 total_published += 1
                 cat_count += 1
                 time.sleep(2)
