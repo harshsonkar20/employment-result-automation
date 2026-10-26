@@ -648,8 +648,40 @@ def build_accurate_html(title, category_name, parsed, border_color="#0284c7"):
     # 3. Important Dates & Fees
     dates = parsed.get("dates", [])
     fees = parsed.get("fees", [])
-    dates_items = "".join([f"<li style='margin-bottom:8px;'><strong>✓</strong> {safe_escape(d)}</li>" for d in dates]) if dates else "<li>Refer to official schedule circular</li>"
-    fees_items = "".join([f"<li style='margin-bottom:8px;'><strong>₹</strong> {safe_escape(f)}</li>" for f in fees]) if fees else "<li>Refer to official notification details</li>"
+
+    dates_items = ""
+    for d in dates:
+        d_clean = clean_text(d)
+        if not d_clean:
+            continue
+        if "candidates are advised" in d_clean.lower():
+            dates_items += f"<li style='display:flex; align-items:flex-start; gap:8px; margin-top:8px; font-size:12.5px; color:#64748b; font-style:italic;'><span style='flex-shrink:0;'>ℹ️</span><span>{safe_escape(d_clean)}</span></li>"
+        else:
+            dates_items += f"<li style='display:flex; align-items:baseline; gap:8px; margin-bottom:8px;'><strong style='color:{border_color}; font-size:14.5px; flex-shrink:0;'>✓</strong><span>{safe_escape(d_clean)}</span></li>"
+    if not dates_items:
+        dates_items = "<li>Refer to official schedule circular</li>"
+
+    fees_items = ""
+    payment_mode_text = ""
+    payment_tokens = ["debit card", "credit card", "internet banking", "imps", "cash card", "mobile wallet", "net banking", "upi", "e-challan", "challan"]
+
+    for f in fees:
+        f_clean = clean_text(f)
+        if not f_clean:
+            continue
+        fl = f_clean.lower()
+        if "payment mode" in fl or "pay the exam fee" in fl or "pay fee through" in fl:
+            payment_mode_text = f_clean
+            continue
+        if any(fl == token or fl == token + "s" for token in payment_tokens):
+            continue
+        fees_items += f"<li style='display:flex; align-items:baseline; gap:8px; margin-bottom:8px;'><strong style='color:#0f766e; font-size:14.5px; flex-shrink:0;'>₹</strong><span>{safe_escape(f_clean)}</span></li>"
+
+    if payment_mode_text:
+        fees_items += f"<li style='display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:10px 12px; background:#f0fdfa; border:1px solid #ccfbf1; border-radius:6px; font-size:13px; color:#0f766e; line-height:1.5;'><span style='flex-shrink:0;'>💳</span><span>{safe_escape(payment_mode_text)}</span></li>"
+
+    if not fees_items:
+        fees_items = "<li>Refer to official notification details</li>"
 
     dates_fees_section = f"""
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 24px 0;">

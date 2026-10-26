@@ -156,31 +156,32 @@
       background: rgba(15, 23, 42, 0.94);
     }
     .header-inner {
-      max-width: 1260px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 12px 20px;
+      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap !important;
     }
     .brand-logo {
       display: inline-flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       text-decoration: none;
       transition: transform 0.2s ease;
       user-select: none;
+      flex-shrink: 0;
     }
     .brand-logo:hover {
       transform: translateY(-1px);
     }
     .brand-badge {
-      width: 50px;
-      height: 50px;
-      min-width: 50px;
-      border-radius: 12px;
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      border-radius: 11px;
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
       display: flex;
@@ -208,7 +209,7 @@
       line-height: 1.15;
     }
     .brand-title {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 900;
       letter-spacing: -0.5px;
       font-family: var(--font-main);
@@ -226,12 +227,12 @@
       color: #ffffff;
     }
     .brand-tagline {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 800;
       letter-spacing: 1px;
       text-transform: uppercase;
       color: #15803d;
-      margin-top: 3px;
+      margin-top: 2px;
       font-family: var(--font-main);
       transition: color 0.2s ease;
     }
@@ -240,35 +241,46 @@
     }
     @media (max-width: 480px) {
       .brand-title {
-        font-size: 21px;
+        font-size: 20px;
       }
       .brand-tagline {
-        font-size: 9px;
+        font-size: 8.5px;
         letter-spacing: 0.8px;
       }
       .brand-badge {
-        width: 42px;
-        height: 42px;
-        min-width: 42px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
       }
     }
     .header-nav {
       display: flex;
       align-items: center;
-      gap: 7px;
-      flex-wrap: wrap;
+      gap: 6px;
+      flex-wrap: nowrap;
+      flex-shrink: 1;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .header-nav::-webkit-scrollbar {
+      display: none;
     }
     .nav-btn {
-      padding: 8px 15px;
-      font-size: 14.5px;
+      padding: 7px 11px;
+      font-size: 13.5px;
       font-weight: 700;
-      border-radius: 9px;
+      border-radius: 8px;
       background: var(--surface-hover);
       color: var(--text-muted);
       transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .nav-btn:hover, .nav-btn.active {
       background: var(--brand);
@@ -284,14 +296,15 @@
       background: var(--surface-hover);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 8px 14px;
-      font-size: 14px;
+      padding: 7px 11px;
+      font-size: 13.5px;
       font-weight: 600;
-      border-radius: 9px;
+      border-radius: 8px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       transition: background 0.2s;
+      flex-shrink: 0;
     }
     .theme-toggle-btn:hover {
       background: var(--border);
@@ -897,10 +910,52 @@
       color: #bbf7d0 !important;
     }
 
-    /* FAQ Section Items (Image 3) */
-    .content-body-area div[style*="background: #f8fafc; border: 1px solid #e2e8f0"],
-    .content-body-area div[style*="background:#f8fafc; border:1px solid #e2e8f0"],
-    .content-body-area .faq-item {
+    /* Important Dates & Application Fee Cards: Fix Icon Separation (Image 2) */
+    .content-body-area div[style*="border-top"] ul,
+    .content-body-area .dates-box ul,
+    .content-body-area .fees-box ul {
+      list-style: none !important;
+      padding-left: 0 !important;
+      margin: 0 !important;
+    }
+    .content-body-area div[style*="border-top"] li,
+    .content-body-area .dates-box li,
+    .content-body-area .fees-box li {
+      display: flex !important;
+      align-items: baseline !important;
+      gap: 9px !important;
+      margin-bottom: 9px !important;
+      font-size: 14.5px !important;
+      line-height: 1.6 !important;
+      color: var(--text) !important;
+    }
+    .content-body-area div[style*="border-top"] li strong,
+    .content-body-area .dates-box li strong,
+    .content-body-area .fees-box li strong {
+      display: inline-block !important;
+      font-size: 14.5px !important;
+      font-weight: 800 !important;
+      margin-bottom: 0 !important;
+      color: var(--brand) !important;
+      flex-shrink: 0 !important;
+    }
+    .content-body-area div[style*="0f766e"] li strong,
+    .content-body-area .fees-box li strong {
+      color: #0f766e !important;
+    }
+    .content-body-area div[style*="border-top"] li span,
+    .content-body-area .dates-box li span,
+    .content-body-area .fees-box li span {
+      display: inline !important;
+      font-size: inherit !important;
+      line-height: inherit !important;
+      color: inherit !important;
+    }
+
+    /* FAQ Section Items (Image 3) - Scoped to FAQ boxes only */
+    .content-body-area .faq-item,
+    .content-body-area div[style*="margin-bottom: 12px; background: #f8fafc"],
+    .content-body-area div[style*="margin-bottom:12px; background:#f8fafc"] {
       background: var(--surface) !important;
       border: 1.5px solid var(--border) !important;
       border-radius: 10px !important;
@@ -908,16 +963,18 @@
       margin-bottom: 14px !important;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
     }
-    .content-body-area div[style*="background: #f8fafc; border: 1px solid #e2e8f0"] strong,
-    .content-body-area div[style*="background:#f8fafc; border:1px solid #e2e8f0"] strong {
+    .content-body-area div[style*="margin-bottom: 12px; background: #f8fafc"] strong,
+    .content-body-area div[style*="margin-bottom:12px; background:#f8fafc"] strong,
+    .content-body-area .faq-item strong {
       font-size: 16.5px !important;
       font-weight: 800 !important;
       color: var(--text) !important;
       display: block !important;
       margin-bottom: 8px !important;
     }
-    .content-body-area div[style*="background: #f8fafc; border: 1px solid #e2e8f0"] span,
-    .content-body-area div[style*="background:#f8fafc; border:1px solid #e2e8f0"] span {
+    .content-body-area div[style*="margin-bottom: 12px; background: #f8fafc"] span,
+    .content-body-area div[style*="margin-bottom:12px; background:#f8fafc"] span,
+    .content-body-area .faq-item span {
       font-size: 15px !important;
       line-height: 1.7 !important;
       color: var(--text-muted) !important;
@@ -1849,6 +1906,42 @@
       }
     }
 
+    // Post Details Cleaner (Fixes icon line breaks & removes duplicate payment method bullets)
+    function cleanPostDetails() {
+      try {
+        var bodyAreas = document.querySelectorAll('.content-body-area, #native-post-body, .post-body, #direct-post-display');
+        var paymentTokens = ['debit card', 'credit card', 'internet banking', 'imps', 'cash card', 'mobile wallet', 'net banking', 'upi', 'e-challan'];
+
+        bodyAreas.forEach(function(bodyArea) {
+          var lis = bodyArea.querySelectorAll('li');
+          lis.forEach(function(li) {
+            var rawTxt = li.textContent.replace(/[₹✓•:\s]/g, '').toLowerCase().trim();
+            if (paymentTokens.indexOf(rawTxt) !== -1) {
+              li.remove();
+              return;
+            }
+
+            var fullTxt = li.textContent.toLowerCase();
+            if (fullTxt.indexOf('candidates are advised') !== -1) {
+              li.style.cssText = 'display:flex !important; align-items:flex-start !important; gap:8px !important; margin-top:10px !important; font-size:12.5px !important; color:var(--text-muted) !important; font-style:italic !important; line-height:1.5 !important;';
+              var strong = li.querySelector('strong');
+              if (strong) {
+                strong.textContent = 'ℹ️';
+                strong.style.cssText = 'color:#64748b !important; font-style:normal !important; flex-shrink:0 !important;';
+              }
+            } else if (fullTxt.indexOf('payment mode') !== -1 || fullTxt.indexOf('pay the exam fee') !== -1) {
+              li.style.cssText = 'display:flex !important; align-items:flex-start !important; gap:8px !important; margin-top:10px !important; padding:10px 12px !important; background:rgba(15, 118, 110, 0.08) !important; border:1px solid rgba(15, 118, 110, 0.22) !important; border-radius:8px !important; font-size:13px !important; line-height:1.5 !important; color:#0f766e !important;';
+              var pStrong = li.querySelector('strong');
+              if (pStrong) {
+                pStrong.textContent = '💳';
+                pStrong.style.cssText = 'font-style:normal !important; flex-shrink:0 !important;';
+              }
+            }
+          });
+        });
+      } catch (err) {}
+    }
+
     // Resizer Tool Page Visibility
     (function checkResizerPage() {
       if (window.location.pathname.indexOf('/p/photo-signature-resizer') !== -1) {
@@ -2357,6 +2450,7 @@
         var nativeBody = document.getElementById('native-post-body');
         if (nativePost && nativeBody && nativeBody.innerText.trim().length > 30) {
           // Native Blogger template rendered post server-side with 0ms latency!
+          cleanPostDetails();
           loadAllPostsProgressively();
           setupLiveSearch();
           return;
@@ -2387,6 +2481,7 @@
         var cachedPost = getCache('post_' + currentPath);
         if (cachedPost && directBox) {
           directBox.innerHTML = cachedPost;
+          cleanPostDetails();
           loadAllPostsProgressively();
           setupLiveSearch();
           return;
@@ -2439,6 +2534,7 @@
           if (directBox) {
             directBox.innerHTML = rendered;
             setCache('post_' + currentPath, rendered);
+            cleanPostDetails();
           }
           if (pTitle) document.title = pTitle + ' — Rojgaar Result';
         }
@@ -2753,6 +2849,7 @@
                         document.querySelector('.post-body');
 
         if (container && (container.innerText.length > 50 || container.children.length > 0)) {
+          cleanPostDetails();
           if (!document.getElementById('sr-resizer-banner')) {
             var banner = document.createElement('div');
             banner.id = 'sr-resizer-banner';
