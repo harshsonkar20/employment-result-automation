@@ -42,12 +42,28 @@ def upgrade_and_clean_posts():
     posts = []
     page_token = None
     print("Fetching existing posts from Blogger...")
-    while True:
-        res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=100, pageToken=page_token).execute()
-        posts.extend(res.get('items', []))
-        page_token = res.get('nextPageToken')
-        if not page_token:
-            break
+    try:
+        while True:
+            res = service.posts().list(blogId=BLOG_ID, status=['LIVE'], maxResults=100, pageToken=page_token).execute()
+            posts.extend(res.get('items', []))
+            page_token = res.get('nextPageToken')
+            if not page_token:
+                break
+    except Exception as e:
+        err_text = str(e)
+        if "invalid_grant" in err_text or "expired or revoked" in err_text.lower():
+            print(f"\n{'='*70}")
+            print("[CRITICAL AUTH ERROR] Google Refresh Token is EXPIRED or REVOKED!")
+            print("Why: Google expires refresh tokens after 7 days if the OAuth consent")
+            print("screen in Google Cloud Console is left in 'Testing' mode.")
+            print("\nHOW TO FIX PERMANENTLY:")
+            print("1. In Google Cloud Console -> APIs & Services -> OAuth consent screen:")
+            print("   Click 'PUBLISH APP' to change Publishing Status to 'In production'.")
+            print("2. Run 'python get_refresh_token.py' locally to generate a new token.")
+            print("3. Update 'GOOGLE_REFRESH_TOKEN' in GitHub Secrets:")
+            print("   Settings -> Secrets and variables -> Actions")
+            print(f"{'='*70}\n")
+        raise
 
     print(f"Scanning {len(posts)} live Blogger posts...")
     reverted_old_count = 0

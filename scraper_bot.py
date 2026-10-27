@@ -184,6 +184,26 @@ def save_published_cache(cache_set):
         pass
 
 def get_blogger_service():
+    missing = []
+    if not CLIENT_ID:
+        missing.append("GOOGLE_CLIENT_ID")
+    if not CLIENT_SECRET:
+        missing.append("GOOGLE_CLIENT_SECRET")
+    if not REFRESH_TOKEN:
+        missing.append("GOOGLE_REFRESH_TOKEN")
+
+    if missing:
+        err_msg = (
+            f"\n{'='*70}\n"
+            f"[CRITICAL AUTH ERROR] Missing Google OAuth credentials:\n"
+            f"Missing secrets: {', '.join(missing)}\n"
+            f"Please configure them in GitHub Repository Settings:\n"
+            f"Settings -> Secrets and variables -> Actions -> Repository secrets\n"
+            f"{'='*70}\n"
+        )
+        print(err_msg)
+        raise ValueError(f"Missing required Google OAuth secrets: {', '.join(missing)}")
+
     creds = Credentials(
         None,
         refresh_token=REFRESH_TOKEN,
